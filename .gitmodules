@@ -1,0 +1,3 @@
+[submodule "src/tm88iv"]
+	path = src/tm88iv
+	url = https://github.com/hatotank/tm88iv.git
