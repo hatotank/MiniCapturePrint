@@ -14,6 +14,7 @@ import numpy as np
 import inspect
 import unicodedata
 import ctypes
+from pathlib import Path
 
 #import icon_resource  # アイコンリソースをインポート
 from config import ConfigHandler   # config.pyからのインポート
@@ -211,6 +212,24 @@ class App(TkinterDnD.Tk):
         self.geometry("1050x720")
         # ウィンドウのリサイズを禁止
         self.resizable(False, False)
+
+        # 必須ファイルチェック
+        src_dir = Path(__file__).parent.resolve()  # srcディレクトリのパスを取得
+        required_files = [
+            src_dir / "../data/JIS0201.TXT",
+            src_dir / "../data/JIS0208.TXT",
+            src_dir / "../data/JIS0212.TXT",
+            src_dir / "../data/JIS0213-2004.TXT",
+            src_dir / "../fonts/OpenMoji-black-glyf.ttf",
+            src_dir / "../fonts/NotoSansJP-Medium.otf",
+            src_dir / "../fonts/unifont_jp-16.0.03.otf",
+            src_dir / "minicaptureprint.ico"
+        ]
+        for file in required_files:
+            if not os.path.exists(file):
+                self.show_error(f"必要なファイルが見つかりません: {file}", "ファイルエラー")
+                sys.exit(1)  # アプリケーションを終了
+
         ## アイコンの設定
         #image_data = base64.b64decode(icon_resource.icon_image)
         #image = Image.open(BytesIO(image_data))
@@ -282,6 +301,7 @@ class App(TkinterDnD.Tk):
         try:
             # ホットキーを登録
             keyboard.add_hotkey(hotkey_combination, self.enqueue_capture_mode)
+            print(f"ホットキー '{hotkey_combination}' が登録されました。")
         except Exception as e:
             self.show_error(f"ホットキーの登録中にエラーが発生しました:\n{e}")
 
@@ -434,6 +454,8 @@ class App(TkinterDnD.Tk):
 
         # 初期状態の更新
         self.update_hybrid_button_state()
+        hwnd = self.winfo_id() # ウィンドウハンドルを取得
+        print(f"Mainhwnd: {hwnd}")
 
 
     def toggle_tag(self, tag_name):
@@ -815,7 +837,7 @@ class App(TkinterDnD.Tk):
         # ウィンドウを非表示にする
         self.withdraw()
 
-        self.selection_window = Tk()
+        self.selection_window = Toplevel(self)
         self.selection_window.attributes("-fullscreen", True)
         self.selection_window.attributes("-alpha", 0.3)  # 半透明
         self.selection_window.attributes("-topmost", True)  # 常に最前面に表示
@@ -826,13 +848,11 @@ class App(TkinterDnD.Tk):
         self.canvas.pack(fill="both", expand=True)
 
         # マウスイベントをバインド
-        self.canvas.bind("<ButtonPress-1>", self.on_mouse_press)
-        self.canvas.bind("<B1-Motion>", self.on_mouse_drag)
-        self.canvas.bind("<ButtonRelease-1>", self.on_mouse_release)
-    
-        # エスケープキーでキャンセル
-        self.selection_window.bind("<Escape>", self.cancel_rectangle_selection)
-
+        self.canvas.bind("<ButtonPress-1>", self.on_mouse_press)  # 左クリックで矩形選択開始
+        self.canvas.bind("<B1-Motion>", self.on_mouse_drag)  # マウスをドラッグして矩形を描画
+        self.canvas.bind("<ButtonRelease-1>", self.on_mouse_release)  # 左クリックを離したときに矩形選択を確定
+        self.canvas.bind("<ButtonPress-3>", self.cancel_rectangle_selection)  # 右クリックでキャンセル
+ 
 
     def cancel_rectangle_selection(self, event=None):
         """
@@ -1218,10 +1238,11 @@ class App(TkinterDnD.Tk):
         #try:
             # PrinterHandlerを使用して印字
         printer_ip = self.config.get("printer_ip", "")
-        #    if not printer_ip:
-        #        messagebox.showerror("エラー", "プリンターのIPアドレスが設定されていません。")
-        #        return
+        if not printer_ip:
+            messagebox.showerror("エラー", "プリンターのIPアドレスが設定されていません。")
+            return
 
+        print("プリンターIPアドレス:", printer_ip)  # デバッグ用
         printer = PrinterHandler(printer_ip)
         printer.print_text_with_tags(self.text_widget,self.processed_image,self.paper_cut_enabled)
             #printer.print_debug_text(text)  # 印字処理を実行
