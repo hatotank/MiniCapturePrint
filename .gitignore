@@ -1,2 +1,6 @@
+# Pythonキャッシュ
+src/__pycache__/
+
+# フォントとJISデータ
 /data
 /fonts
