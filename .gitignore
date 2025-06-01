@@ -5,5 +5,8 @@ src/__pycache__/
 /data
 /fonts
 
+# 設定
+/confg
+
 # 開発中
 \!dev_*
