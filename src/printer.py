@@ -7,9 +7,19 @@ from tm88iv.tm88iv import TM88IV
 
 class PrinterHandler:
     def __init__(self, ip_address, media_width=512):
+
+        config = {
+            "jis0201_file": "../data/JIS0201.TXT",  # JIS0201 データファイル
+            "jis0208_file": "../data/JIS0208.TXT",  # JIS0208 データファイル
+            "jis0212_file": "../data/JIS0212.TXT",  # JIS0212 データファイル
+            "jis0213_file": "../data/JIS0213-2004.TXT",  # JIS0213-2004 データファイル
+            "emoji_font_file": "../fonts/OpenMoji-black-glyf.ttf",  # OpenMoji フォント
+            "kanji_font_file": "../fonts/NotoSansJP-Medium.otf",  # 日本語フォント
+            "fallback_font_file": "../fonts/unifont_jp-16.0.03.otf",  # フォールバックフォント
+        }
         #self.printer = Network(ip_address)
         self.ip = ip_address
-        self.tm_print = TM88IV(self.ip)
+        self.tm_print = TM88IV(self.ip, config=config)  # TM88IVのインスタンスを作成
         #self.tm_print.profile.profile_data
         #self.printer.media_width = media_width
         # python-escpos ver3.1にて確認
@@ -26,7 +36,6 @@ class PrinterHandler:
 
         if not text.strip() and not image_path:
             return
-
 
         self.tm_print.open()  # プリンタを開く
         print(f"印刷するテキスト: {text.strip()}")  # デバッグ用に出力
