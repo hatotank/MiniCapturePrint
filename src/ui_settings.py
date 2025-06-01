@@ -192,10 +192,10 @@ class SettingsWindow(Toplevel):
 
         # ホットキー組み合わせ
         self.hotkey_combination.delete(0, "end")
-        self.hotkey_combination.insert(0, self.config_data.get("hotkey_combination", "ctrl+alt+shift+p"))
+        self.hotkey_combination.insert(0, self.config_data.get("hotkey_combination", "ctrl+alt+shift+c"))
         if self._validate_hotkey_combination(silent=True) is False:
             messagebox.showwarning("警告", "ホットキー組み合わせが無効です。初期値に値に戻します。")
-            self.hotkey_combination.set("ctrl+alt+shift+p")
+            self.hotkey_combination.set("ctrl+alt+shift+c")
 
         # キャプチャ時の回転方向
         rotate_direction = self.config_data.get("rotate_direction", "clockwise")
@@ -383,7 +383,7 @@ class SettingsWindow(Toplevel):
         lower_hotkey_combination = self.hotkey_combination.get().lower()
         if not re.match(r"(ctrl|alt|shift|\+|[a-z0-9])+", lower_hotkey_combination):
             if not silent:
-                messagebox.showerror("エラー", "ホットキーの形式が不正です（例: ctrl+alt+p）")
+                messagebox.showerror("エラー", "ホットキーの形式が不正です（例: ctrl+alt+c）")
             return False
         return True
 
