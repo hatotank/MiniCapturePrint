@@ -200,6 +200,7 @@ class App(TkinterDnD.Tk):
         # 設定を読み込む(設定はアプリ再起動後に反映)
         self.config_manager = ConfigHandler()
         self.config = self.config_manager.load_config()
+        print(f"設定ファイル読み込み完了: {self.config}")
 
         # メインスレッドで処理を渡すためのキュー
         self.queue = queue.Queue()
@@ -276,7 +277,6 @@ class App(TkinterDnD.Tk):
 
         # フォームとボタンを追加
         self.create_form()
-
 
 
     def show_error(self, message, title="エラー"):
@@ -379,8 +379,10 @@ class App(TkinterDnD.Tk):
         text_force_size = "横幅" + str(self.printer_image_max_width) + "固定"
         self.checkbutton3 = Checkbutton(options_frame, text=text_force_size, variable=self.widthforce_mode)
         self.checkbutton3.place(x=10, y=10, width=86, height=16)
+        # ラベルフレーム：チェックボックス：読込時回転
         self.checkbutton4 = Checkbutton(options_frame, text="読込時90°回転", variable=self.rotate_load_enabled)
         self.checkbutton4.place(x=10, y=36, width=96, height=16)
+        # ラベルフレーム：チェックボックス：小さい画像を拡大
         self.checkbutton5 = Checkbutton(options_frame, text="小さい画像を拡大", variable=self.auto_enlarge_enabled)
         self.checkbutton5.place(x=10, y=62, width=106, height=16)
         # キャプチャボタン
@@ -678,9 +680,6 @@ class App(TkinterDnD.Tk):
         for rb in self.filter_radio_buttons:
             rb.config(state="normal" if enabled else "disabled")
 
-
-# ===== Chat GPT Canvas分割ライン =====
-
     def hybrid_dithering(self, image, edge_threshold=128, dither_type=0, matrix_size=4, filter_type="FIND_EDGES", filter_enabled=True, random_seed=0):
         """
         ハイブリッドディザリングを適用
@@ -952,7 +951,13 @@ class App(TkinterDnD.Tk):
             image = Image.open(file_path)
             # 90度回転読込が有効の場合
             if self.rotate_load_enabled.get():
-                image = image.rotate(90, expand=True) # TODO:設定で変更できるように(時計回り/反時計回り)
+                # 画像の回転方向を設定
+                if self.config.get("rotate_direction", "clockwise") == "clockwise":
+                    # 時計回りに90度回転
+                    image = image.rotate(-90, expand=True)
+                else:
+                    # 反時計回りに90度回転
+                    image = image.rotate(90, expand=True)
             # 元の画像を保存
             self.original_image = image.copy()
             # キャンバス反映
@@ -1051,7 +1056,14 @@ class App(TkinterDnD.Tk):
             screenshot = ImageGrab.grab(bbox=(x1, y1, x2, y2))
             # 90度回転読込が有効の場合
             if self.rotate_load_enabled.get():
-                screenshot = screenshot.rotate(90, expand=True) # TODO:設定で変更できるように(時計回り/反時計回り)
+                if self.config.get("rotate_direction", "clockwise") == "clockwise":
+                    # 時計回りに90度回転
+                    print("時計回りに90度回転")
+                    screenshot = screenshot.rotate(-90, expand=True)
+                else:
+                    # 反時計回りに90度回転
+                    print("反時計回りに90度回転")
+                    screenshot = screenshot.rotate(90, expand=True)
             # 元の画像を保存
             self.original_image = screenshot.copy()
             # キャンバス反映
