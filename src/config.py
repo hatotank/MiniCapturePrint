@@ -4,7 +4,7 @@ from tkinter import messagebox
 
 class ConfigHandler:
 
-    CONFIG_FILE = "config.json"
+    CONFIG_FILE = "../config/config.json"
 
     def __init__(self, config_file=CONFIG_FILE):
         """
