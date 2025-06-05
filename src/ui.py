@@ -172,6 +172,7 @@ class App(TkinterDnD.Tk):
         self.image_invert_enabled = BooleanVar(value=False) # 反転の有効/無効
         self.paper_cut_enabled = BooleanVar(value=True) # 用紙カットの有効/無効
         self.image_out_enabled = BooleanVar(value=True) # 画像印刷の有効/無効
+        self.text_out_enabled = BooleanVar(value=True) # テキスト印刷の有効/無効
 
         self.filter_map = {
             "FIND_EDGES": ImageFilter.FIND_EDGES,
@@ -429,6 +430,10 @@ class App(TkinterDnD.Tk):
         # === デバッグボタン ===
         Button(self, text="デバッグ", command=lambda: self.debug_print_text_with_tags(self.text_widget)).place(x=60, y=663, width=47, height=46)
 
+        # テキスト印刷
+        #Button(self, text="テキスト印刷", command=self.print_text).place(x=110, y=663, width=80, height=46)
+        self.checkbutton7 = Checkbutton(self, text="テキスト印刷", variable=self.text_out_enabled, command=self.update_preview)
+        self.checkbutton7.place(x=680, y=666, width=84, height=16)
         # 画像印刷
         self.checkbutton6 = Checkbutton(self, text="画像印刷", variable=self.image_out_enabled, command=self.update_preview)
         self.checkbutton6.place(x=780, y=666, width=78, height=16)
@@ -436,7 +441,7 @@ class App(TkinterDnD.Tk):
         self.checkbutton1 = Checkbutton(self, text="用紙カット", variable=self.paper_cut_enabled, command=self.update_preview)
         self.checkbutton1.place(x=780, y=692, width=80, height=16)
         # 印字ボタン
-        Button(self, text="印字", font=self.boldfont, command=self.print_debug_text).place(x=886, y=663, width=147, height=46)
+        Button(self, text="印刷", font=self.boldfont, command=self.print_debug_text).place(x=886, y=663, width=147, height=46)
 
         # タグ定義
         # バーコードタグの設定
@@ -497,7 +502,7 @@ class App(TkinterDnD.Tk):
     def debug_print_text_with_tags(self, text_widget):
         total_lines = int(text_widget.index("end-1c").split(".")[0])
         print("=" * 40)
-        print("📤 Text Widget 内容とタグ状態（デバッグ出力）")
+        print("Text Widget 内容とタグ状態（デバッグ出力）")
         for lineno in range(1, total_lines + 1):
             line_start = f"{lineno}.0"
             line_end = f"{lineno}.end"
