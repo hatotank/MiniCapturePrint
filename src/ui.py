@@ -1261,7 +1261,11 @@ class App(TkinterDnD.Tk):
 
         print("プリンターIPアドレス:", printer_ip)  # デバッグ用
         printer = PrinterHandler(printer_ip)
-        printer.print_text_with_tags(self.text_widget,self.processed_image,self.paper_cut_enabled)
+        printer.print_text_with_tags(text_widget=self.text_widget,
+                                     image_path=self.processed_image,
+                                     enable_text_print=self.text_out_enabled,
+                                     enable_image_print=self.image_out_enabled,
+                                     should_cut_paper=self.paper_cut_enabled)
             #printer.print_debug_text(text)  # 印字処理を実行
             #printer.print_image(self.processed_image)  # 印字処理を実行
             #messagebox.showinfo("成功", "印字が完了しました。")
