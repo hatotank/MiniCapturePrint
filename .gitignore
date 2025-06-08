@@ -6,7 +6,7 @@ src/__pycache__/
 /fonts
 
 # 設定
-/confg
+/config
 
 # 開発中
 \!dev_*
