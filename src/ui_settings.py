@@ -21,7 +21,6 @@ class SettingsWindow(Toplevel):
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.config_data = config
-
         self.printer_ip = StringVar()
         self.printer_port = StringVar()
         self.image_max_width = StringVar()
@@ -30,9 +29,11 @@ class SettingsWindow(Toplevel):
         self.hotkey_enabled = BooleanVar()
         self.hotkey_combination = None # Entryウィジェットは後で作成
         self.rotate_direction = StringVar()
-        self.edge_detection = StringVar()
-        self.dither_pattern = StringVar()
-        self.matrix_size = StringVar()
+        self.emoji_font_enabled = BooleanVar()
+        self.printer_emoji_font = StringVar()
+        self.printer_emoji_font_size = StringVar()
+        self.printer_emoji_font_adjust_x = StringVar()
+        self.printer_emoji_font_adjust_y = StringVar()
 
         self.create_widgets()
         self.load_config()
@@ -55,23 +56,23 @@ class SettingsWindow(Toplevel):
         options_frame1 = LabelFrame(self, text="プリンタ設定")
         options_frame1.place(x=10, y=10, width=490, height=140)
         # IPアドレス
-        label1 = Label(options_frame1, text="IPアドレス")
-        label1.place(x=5, y=5, height=21)
+        label_ip = Label(options_frame1, text="IPアドレス")
+        label_ip.place(x=5, y=5, height=21)
         self.printer_ip = Entry(options_frame1, width=20)
         self.printer_ip.place(x=10, y=30, height=21)
         # ポート番号
-        label2 = Label(options_frame1, text="ポート番号")
-        label2.place(x=5, y=55, height=21)
+        label_port = Label(options_frame1, text="ポート番号")
+        label_port.place(x=5, y=55, height=21)
         self.printer_port = Entry(options_frame1, width=20)
         self.printer_port.place(x=10, y=80, height=21)
         # 最大画像幅(横／ピクセル)
-        label3 = Label(options_frame1, text="最大画像幅(横／ピクセル)")
-        label3.place(x=200, y=5, height=21)
+        label_image_width = Label(options_frame1, text="最大画像幅(横／ピクセル)")
+        label_image_width.place(x=200, y=5, height=21)
         self.image_max_width = Entry(options_frame1, width=20)
         self.image_max_width.place(x=205, y=30, height=21)
         # 最大画像幅(縦／ピクセル)
-        label4 = Label(options_frame1, text="最大画像幅(縦／ピクセル)")
-        label4.place(x=200, y=55, height=21)
+        label_image_height = Label(options_frame1, text="最大画像幅(縦／ピクセル)")
+        label_image_height.place(x=200, y=55, height=21)
         self.image_max_height = Entry(options_frame1, width=20)
         self.image_max_height.place(x=205, y=80, height=21)
 
@@ -79,62 +80,56 @@ class SettingsWindow(Toplevel):
         options_frame2 = LabelFrame(self, text="基本動作")
         options_frame2.place(x=10, y=160, width=490, height=230)
         # 起動モード(フォーム表示/タスクトレイ)
-        label10 = Label(options_frame2, text="起動モード")
-        label10.place(x=5, y=5, height=21)
-        radiobutton10 = Radiobutton(options_frame2, text="フォーム表示", variable=self.startup_mode, value="form")
-        radiobutton10.place(x=10, y=30, height=21)
-        radiobutton20 = Radiobutton(options_frame2, text="タスクトレイ", variable=self.startup_mode, value="tray")
-        radiobutton20.place(x=120, y=30, height=21)
+        label_startup = Label(options_frame2, text="起動モード")
+        label_startup.place(x=5, y=5, height=21)
+        radio_startup_mode_from = Radiobutton(options_frame2, text="フォーム表示", variable=self.startup_mode, value="form")
+        radio_startup_mode_from.place(x=10, y=30, height=21)
+        radio_startup_mode_tray = Radiobutton(options_frame2, text="タスクトレイ", variable=self.startup_mode, value="tray")
+        radio_startup_mode_tray.place(x=120, y=30, height=21)
         # ホットキー有効化
-        label11 = Label(options_frame2, text="ホットキー有効化")
-        label11.place(x=5, y=55, height=21)
-        checkbutton10 = Checkbutton(options_frame2, text="有効", variable=self.hotkey_enabled, command=self._toggle_hotkey_combination)
-        checkbutton10.place(x=10, y=80, height=21)
+        label_hotkey = Label(options_frame2, text="ホットキー有効化(※非推奨)")
+        label_hotkey.place(x=5, y=55, height=21)
+        check_hotkey_enable = Checkbutton(options_frame2, text="有効(Pythonの仕様やWindows環境によっては、正常に動作しない場合があります)", variable=self.hotkey_enabled, command=self._toggle_hotkey_combination)
+        check_hotkey_enable.place(x=10, y=80, height=21)
         # ホットキー組み合わせ
-        label12 = Label(options_frame2, text="ホットキー組み合わせ")
-        label12.place(x=5, y=105, height=21)
+        label__hotkey_conbination = Label(options_frame2, text="ホットキー組み合わせ")
+        label__hotkey_conbination.place(x=5, y=105, height=21)
         self.hotkey_combination = Entry(options_frame2, width=50)
         self.hotkey_combination.place(x=10, y=130, height=21)
         # キャプチャ時の回転方向(時計回り/反時計回り)
-        label13 = Label(options_frame2, text="キャプチャ時の回転方向")
-        label13.place(x=5, y=155, height=21)
-        radiobutton13 = Radiobutton(options_frame2, text="時計回り", variable=self.rotate_direction, value="clockwise")
-        radiobutton13.place(x=10, y=180, height=21)
-        radiobutton14 = Radiobutton(options_frame2, text="反時計回り", variable=self.rotate_direction, value="counterclockwise")
-        radiobutton14.place(x=120, y=180, height=21)
+        label_rotate_direction = Label(options_frame2, text="キャプチャ時の回転方向")
+        label_rotate_direction.place(x=5, y=155, height=21)
+        label_rotate_direction_clockwise = Radiobutton(options_frame2, text="時計回り", variable=self.rotate_direction, value="clockwise")
+        label_rotate_direction_clockwise.place(x=10, y=180, height=21)
+        label_rotate_direction_counterclockwise = Radiobutton(options_frame2, text="反時計回り", variable=self.rotate_direction, value="counterclockwise")
+        label_rotate_direction_counterclockwise.place(x=120, y=180, height=21)
 
         # ラベルフレーム：高度な設定
-        options_frame3 = LabelFrame(self, text="高度な設定(ハイブリッドディザ用)")
+        options_frame3 = LabelFrame(self, text="高度な設定(絵文字フォント変更)")
         options_frame3.place(x=10, y=400, width=490, height=190)
-        # エッジ検出(FIND_EDGES/EDGE_ENHANCE/EDGE_ENHANCE_MORE/CONTOUR)
-        label20 = Label(options_frame3, text="エッジ検出")
-        label20.place(x=5, y=5, height=21)
-        radiobutton100 = Radiobutton(options_frame3, text="FIND_EDGES", variable=self.edge_detection, value="FIND_EDGES")
-        radiobutton100.place(x=10, y=30, height=21)
-        radiobutton200 = Radiobutton(options_frame3, text="EDGE_ENHANCE", variable=self.edge_detection, value="EDGE_ENHANCE")
-        radiobutton200.place(x=130, y=30, height=21)
-        radiobutton300 = Radiobutton(options_frame3, text="ENHANCE_MORE", variable=self.edge_detection, value="EDGE_ENHANCE_MORE")
-        radiobutton300.place(x=250, y=30, height=21)
-        radiobutton400 = Radiobutton(options_frame3, text="CONTOUR", variable=self.edge_detection, value="CONTOUR")
-        radiobutton400.place(x=370, y=30, height=21)
-        # ディザパターン変更(bayer/random/clustered)
-        label21 = Label(options_frame3, text="ディザパターン変更")
-        label21.place(x=5, y=55, height=21)
-        radiobutton110 = Radiobutton(options_frame3, text="bayer", variable=self.dither_pattern, value="bayer")
-        radiobutton110.place(x=10, y=80, height=21)
-        radiobutton210 = Radiobutton(options_frame3, text="random", variable=self.dither_pattern, value="random")
-        radiobutton210.place(x=130, y=80, height=21)
-        radiobutton310 = Radiobutton(options_frame3, text="clustered", variable=self.dither_pattern, value="clustered")
-        radiobutton310.place(x=250, y=80, height=21)
-        # マトリクス数(2/4/8)
-        label22 = Label(options_frame3, text="マトリクス数")
-        label22.place(x=5, y=105, height=21)
-        radiobutton120 = Radiobutton(options_frame3, text="2", variable=self.matrix_size, value="2")
-        radiobutton120.place(x=10, y=130, height=21)
-        radiobutton220 = Radiobutton(options_frame3, text="4", variable=self.matrix_size, value="4")
-        radiobutton220.place(x=130, y=130, height=21)
-        radiobutton320 = Radiobutton(options_frame3, text="8", variable=self.matrix_size, value="8")
-        radiobutton320.place(x=250, y=130, height=21)
+        # 高度な設定有効化
+        label_hotkey = Label(options_frame3, text="絵文字フォント変更有効化")
+        label_hotkey.place(x=5, y=5, height=21)
+        check_hotkey_enable = Checkbutton(options_frame3, text="有効", variable=self.emoji_font_enabled, command=self._toggle_emoji_settings)
+        check_hotkey_enable.place(x=10, y=30, height=21)
+        # フォントファイル名/フォントサイズ
+        label_emoji_font = Label(options_frame3, text="フォントファイル名(dataフォルダに格納)")
+        label_emoji_font.place(x=5, y=55, height=21)
+        self.printer_emoji_font = Entry(options_frame3, width=20)
+        self.printer_emoji_font.place(x=10, y=80, height=21)
+        label_emoji_font_size = Label(options_frame3, text="フォントサイズ")
+        label_emoji_font_size.place(x=200, y=55, height=21)
+        self.printer_emoji_font_size = Entry(options_frame3, width=20)
+        self.printer_emoji_font_size.place(x=205, y=80, height=21)
+        # フォント位置調節(X座標/Y座標)
+        label_emoji_adust_x = Label(options_frame3, text="フォント位置調節(X座標)")
+        label_emoji_adust_x.place(x=5, y=105, height=21)
+        label_emoji_adust_y = Label(options_frame3, text="フォント位置調節(Y座標)")
+        label_emoji_adust_y.place(x=200, y=105, height=21)
+        self.printer_emoji_font_adjust_x = Entry(options_frame3, width=20)
+        self.printer_emoji_font_adjust_x.place(x=10, y=130, height=21)
+        self.printer_emoji_font_adjust_y = Entry(options_frame3, width=20)
+        self.printer_emoji_font_adjust_y.place(x=205, y=130, height=21)
 
         # ボタン配置
         Button(self, text="保存", command=self.save_config).place(x=510, y=18, width=100, height=30)
@@ -207,46 +202,44 @@ class SettingsWindow(Toplevel):
             messagebox.showwarning("警告", "キャプチャ時の回転方向が無効です。初期値に値に戻します。")
             self.rotate_direction.set("clockwise")
 
-        # エッジ検出
-        edge_detection = self.config_data.get("edge_detection", "FIND_EDGES")
-        if edge_detection == "FIND_EDGES":
-            self.edge_detection.set("FIND_EDGES")
-        elif edge_detection == "EDGE_ENHANCE":
-            self.edge_detection.set("EDGE_ENHANCE")
-        elif edge_detection == "EDGE_ENHANCE_MORE":
-            self.edge_detection.set("EDGE_ENHANCE_MORE")
-        elif edge_detection == "CONTOUR":
-            self.edge_detection.set("CONTOUR")
-        if self._validate_edge_detection(silent=True) is False:
-            messagebox.showwarning("警告", "エッジ検出が無効です。初期値に値に戻します。")
-            self.edge_detection.set("FIND_EDGES")
+        # 絵文字フォント変更有効化
+        self.emoji_font_enabled.set(self.config_data.get("printer_emoji_font_enabled", False))
+        if self._validate_emoji_enabled(silent=True) is False:
+            messagebox.showwarning("警告", "絵文字フォント変更有効化が無効です。初期値に値に戻します。")
+            self.emoji_font_enabled.set(False)
 
-        # ディザパターン変更
-        dither_pattern = self.config_data.get("dither_pattern", "bayer")
-        if dither_pattern == "bayer":
-            self.dither_pattern.set("bayer")
-        elif dither_pattern == "random":
-            self.dither_pattern.set("random")
-        elif dither_pattern == "clustered":
-            self.dither_pattern.set("clustered")
-        if self._validate_dither_pattern(silent=True) is False:
-            messagebox.showwarning("警告", "ディザパターン変更が無効です。初期値に値に戻します。")
-            self.dither_pattern.set("bayer")
+        # 絵文字フォント
+        self.printer_emoji_font.delete(0, "end")
+        self.printer_emoji_font.insert(0, self.config_data.get("printer_emoji_font", "OpenMoji-black-glyf.ttf"))
+        if self._validate_emoji_font_file(silent=True) is False:
+            messagebox.showwarning("警告", "絵文字フォントファイルが無効です。初期値に値に戻します。")
+            self.printer_emoji_font.set("OpenMoji-black-glyf.ttf")
 
-        # マトリクス数
-        matrix_size = int(self.config_data.get("matrix_size", 4))
-        if matrix_size == 2:
-            self.matrix_size.set(2)
-        elif matrix_size == 4:
-            self.matrix_size.set(4)
-        elif matrix_size == 8:
-            self.matrix_size.set(8)
-        if self._validate_matrix_size(silent=True) is False:
-            messagebox.showwarning("警告", "マトリクス数が無効です。初期値に値に戻します。")
-            self.matrix_size.set(4)
+        # 絵文字フォントサイズ
+        self.printer_emoji_font_size.delete(0, "end")
+        self.printer_emoji_font_size.insert(0, self.config_data.get("printer_emoji_font_size", "20"))
+        if self._validate_emoji_font_size(silent=True) is False:
+            messagebox.showwarning("警告", "絵文字フォントサイズが無効です。初期値に値に戻します。")
+            self.printer_emoji_font_size.set("20")
+
+        # 絵文字フォント位置調節(X座標)
+        self.printer_emoji_font_adjust_x.delete(0, "end")
+        self.printer_emoji_font_adjust_x.insert(0, self.config_data.get("printer_emoji_font_adjust_x", "0"))
+        if self._validate_emoji_font_adjust_x(silent=True) is False:
+            messagebox.showwarning("警告", "絵文字フォント位置調節(X座標)が無効です。初期値に値に戻します。")
+            self.printer_emoji_font_adjust_x.set("0")
+
+        # 絵文字フォント位置調節(Y座標)
+        self.printer_emoji_font_adjust_y.delete(0, "end")
+        self.printer_emoji_font_adjust_y.insert(0, self.config_data.get("printer_emoji_font_adjust_y", "0"))
+        if self._validate_emoji_font_adjust_y(silent=True) is False:
+            messagebox.showwarning("警告", "絵文字フォント位置調節(Y座標)が無効です。初期値に値に戻します。")
+            self.printer_emoji_font_adjust_y.set("0")
 
         # ホットキー組み合わせの有効/無効を切り替え
         self._toggle_hotkey_combination()
+        # 絵文字フォント設定の有効/無効を切り替え
+        self._toggle_emoji_settings()
 
 
     def save_config(self):
@@ -274,12 +267,16 @@ class SettingsWindow(Toplevel):
         self.config_data.set("hotkey_combination", self.hotkey_combination.get())
         # キャプチャ時の回転方向
         self.config_data.set("rotate_direction", self.rotate_direction.get())
-        # エッジ検出
-        self.config_data.set("edge_detection", self.edge_detection.get())
-        # ディザパターン変更
-        self.config_data.set("dither_pattern", self.dither_pattern.get())
-        # マトリクス数
-        self.config_data.set("matrix_size", self.matrix_size.get())
+        # 絵文字フォント変更有効化
+        self.config_data.set("printer_emoji_font_enabled", self.emoji_font_enabled.get())
+        # 絵文字フォントファイル名
+        self.config_data.set("printer_emoji_font", self.printer_emoji_font.get())
+        # 絵文字フォントサイズ
+        self.config_data.set("printer_emoji_font_size", self.printer_emoji_font_size.get())
+        # 絵文字フォント位置調節(X座標)
+        self.config_data.set("printer_emoji_font_adjust_x", self.printer_emoji_font_adjust_x.get())
+        # 絵文字フォント位置調節(Y座標)
+        self.config_data.set("printer_emoji_font_adjust_y", self.printer_emoji_font_adjust_y.get())
 
         # 設定を保存
         self.config_data.save_config()
@@ -300,9 +297,11 @@ class SettingsWindow(Toplevel):
             self._validate_hotkey_enabled(silent) and
             self._validate_hotkey_combination(silent) and
             self._validate_rotate_direction(silent) and
-            self._validate_edge_detection(silent) and
-            self._validate_dither_pattern(silent) and
-            self._validate_matrix_size(silent)
+            self._validate_emoji_enabled(silent) and
+            self._validate_emoji_font_file(silent) and
+            self._validate_emoji_font_size(silent) and
+            self._validate_emoji_font_adjust_x(silent) and
+            self._validate_emoji_font_adjust_y(silent)
         )
 
     def _validate_ip(self, silent):
@@ -397,38 +396,62 @@ class SettingsWindow(Toplevel):
             return False
         return True
 
-    def _validate_edge_detection(self, silent):
+    def _validate_emoji_enabled(self, silent):
         """
-        エッジ検出の検証
+        絵文字フォント変更有効化の検証
         """
-        if self.edge_detection.get() not in ["FIND_EDGES", "EDGE_ENHANCE", "EDGE_ENHANCE_MORE", "CONTOUR"]:
+        if not isinstance(self.emoji_font_enabled.get(), bool):
             if not silent:
-                messagebox.showerror("エラー", "エッジ検出の指定が不正です（例: FIND_EDGES, EDGE_ENHANCE, EDGE_ENHANCE_MORE, CONTOUR）")
+                messagebox.showerror("エラー", "絵文字フォント変更有効化の指定が不正です（True または False）")
             return False
         return True
 
-    def _validate_dither_pattern(self, silent):
+    def _validate_emoji_font_file(self, silent):
         """
-        ディザパターン変更の検証
+        絵文字フォントファイルの検証
         """
-        if self.dither_pattern.get() not in ["bayer", "random", "clustered"]:
+        if self.emoji_font_enabled.get() and not self.printer_emoji_font.get().isspace():
             if not silent:
-                messagebox.showerror("エラー", "ディザパターンの指定が不正です（例: bayer, random, clustered）")
+                messagebox.showerror("エラー", "絵文字フォントファイル名が指定されていません")
             return False
         return True
 
-    def _validate_matrix_size(self, silent):
+    def _validate_emoji_font_size(self, silent):
         """
-        マトリクス数の検証（2のべき乗かつ許可値限定）
+        絵文字フォントサイズの検証
         """
         try:
-            size = int(self.matrix_size.get())
-            if size not in [2, 4, 8]:
+            size = int(self.printer_emoji_font_size.get())
+            if size <= 0:
                 raise ValueError
             return True
         except ValueError:
             if not silent:
-                messagebox.showerror("エラー", "マトリクスサイズは2, 4, 8のいずれかで指定してください")
+                messagebox.showerror("エラー", "絵文字フォントサイズは正の整数で指定してください")
+            return False
+
+    def _validate_emoji_font_adjust_x(self, silent):
+        """
+        絵文字フォント位置調節(X座標)の検証
+        """
+        try:
+            adjust_x = int(self.printer_emoji_font_adjust_x.get())
+            return True
+        except ValueError:
+            if not silent:
+                messagebox.showerror("エラー", "絵文字フォント位置調節(X座標)が不正です")
+            return False
+
+    def _validate_emoji_font_adjust_y(self, silent):
+        """
+        絵文字フォント位置調節(Y座標)の検証
+        """
+        try:
+            adjust_y = int(self.printer_emoji_font_adjust_y.get())
+            return True
+        except ValueError:
+            if not silent:
+                messagebox.showerror("エラー", "絵文字フォント位置調節(Y座標)が不正です")
             return False
 
     def _toggle_hotkey_combination(self):
@@ -439,3 +462,18 @@ class SettingsWindow(Toplevel):
             self.hotkey_combination.config(state="normal")
         else:
             self.hotkey_combination.config(state="disabled")
+
+    def _toggle_emoji_settings(self):
+        """
+        絵文字フォント設定の有効/無効を切り替えるメソッド
+        """
+        if self.emoji_font_enabled.get():
+            self.printer_emoji_font.config(state="normal")
+            self.printer_emoji_font_size.config(state="normal")
+            self.printer_emoji_font_adjust_x.config(state="normal")
+            self.printer_emoji_font_adjust_y.config(state="normal")
+        else:
+            self.printer_emoji_font.config(state="disabled")
+            self.printer_emoji_font_size.config(state="disabled")
+            self.printer_emoji_font_adjust_x.config(state="disabled")
+            self.printer_emoji_font_adjust_y.config(state="disabled")
