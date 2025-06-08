@@ -1,17 +1,19 @@
+from pathlib import Path
+from tkinter import messagebox
 import json
 import os
-from tkinter import messagebox
 
 class ConfigHandler:
 
-    CONFIG_FILE = "../config/config.json"
-
-    def __init__(self, config_file=CONFIG_FILE):
+    def __init__(self, config_file=Path("../config/config.json")):
         """
         設定ファイルを読み込むクラス
-        :param config_file: 設定ファイルのパス
+        :param config_file: 設定ファイルのパス（Pathオブジェクト推奨）
         """
-        self.config_file = config_file
+        # 文字列で渡された場合もPathに変換
+        self.config_file = config_file if isinstance(config_file, Path) else Path(config_file)
+        self.config_file = self.config_file.resolve()  # 絶対パスに変換
+        print(f"[INFO] 設定ファイルのパス: {self.config_file}")
         self.config = self.load_config()
 
 
@@ -39,6 +41,9 @@ class ConfigHandler:
         設定を保存します。
         """
         try:
+            # ディレクトリが存在しない場合は作成
+            self.config_file.parent.mkdir(parents=True, exist_ok=True)
+            # 設定をJSON形式で保存
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=4, ensure_ascii=False)
         except Exception as e:
@@ -62,4 +67,3 @@ class ConfigHandler:
         :param value: 設定の値
         """
         self.config[key] = value
-        self.save_config()
