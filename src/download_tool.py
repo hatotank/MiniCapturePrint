@@ -1,10 +1,10 @@
+from pathlib import Path
 import sys
 import threading
 import time
 import shutil
 import zipfile
 import urllib.request
-from pathlib import Path
 
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
