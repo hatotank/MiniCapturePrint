@@ -16,7 +16,6 @@ import unicodedata
 import ctypes
 from pathlib import Path
 
-#import icon_resource  # アイコンリソースをインポート
 from config import ConfigHandler   # config.pyからのインポート
 from printer import PrinterHandler # printer.pyからのインポート
 from ui_settings import SettingsWindow # ui_settings.pyからのインポート
@@ -199,9 +198,10 @@ class App(TkinterDnD.Tk):
         self.hybrid_random_seed = IntVar(value=0)  # 0〜255のシード値
 
         # 設定を読み込む(設定はアプリ再起動後に反映)
-        self.config_manager = ConfigHandler()
+        self.src_dir = Path(__file__).parent.resolve()  # srcディレクトリのパスを取得
+        self.config_manager = ConfigHandler(self.src_dir / "../config/config.json")
         self.config = self.config_manager.load_config()
-        print(f"設定ファイル読み込み完了: {self.config}")
+        print(f"設定ファイル読み込み完了1: {self.config}")
 
         # メインスレッドで処理を渡すためのキュー
         self.queue = queue.Queue()
@@ -215,56 +215,52 @@ class App(TkinterDnD.Tk):
         # ウィンドウのリサイズを禁止
         self.resizable(False, False)
 
-        # 必須ファイルチェック
-        src_dir = Path(__file__).parent.resolve()  # srcディレクトリのパスを取得
-        required_files = [
-            src_dir / "../data/JIS0201.TXT",
-            src_dir / "../data/JIS0208.TXT",
-            src_dir / "../data/JIS0212.TXT",
-            src_dir / "../data/JIS0213-2004.TXT",
-            src_dir / "../fonts/OpenMoji-black-glyf.ttf",
-            src_dir / "../fonts/NotoSansJP-Medium.otf",
-            src_dir / "../fonts/unifont_jp-16.0.03.otf",
-            src_dir / "minicaptureprint.ico"
-        ]
-        for file in required_files:
-            if not os.path.exists(file):
-                self.show_error(f"必要なファイルが見つかりません: {file}", "ファイルエラー")
+        # TM88IVクラス用設定
+        self.tm88iv_config = {
+            "jis0201_file": self.src_dir / "../data/JIS0201.TXT",  # JIS0201 データファイル
+            "jis0208_file": self.src_dir / "../data/JIS0208.TXT",  # JIS0208 データファイル
+            "jis0212_file": self.src_dir / "../data/JIS0212.TXT",  # JIS0212 データファイル
+            "jis0213_file": self.src_dir / "../data/JIS0213-2004.TXT",  # JIS0213-2004 データファイル
+            "emoji_font_file": self.src_dir / "../fonts/OpenMoji-black-glyf.ttf",  # 絵文字フォント
+            "kanji_font_file": self.src_dir / "../fonts/NotoSansJP-Medium.otf",  # 日本語フォント
+            "fallback_font_file": self.src_dir / "../fonts/unifont_jp-16.0.03.otf",  # フォールバックフォント
+            # TM88IVクラスの引数ではないけど、ファイルチェックの関係上含める
+            "icon_file": self.src_dir / "minicaptureprint.ico"  # アイコンファイル
+        }
+
+        # 絵文字フォント変更有効化している場合は、設定からフォントファイルを取得して設定
+        emoji_font_enabled = self.config.get("printer_emoji_font_enabled", False)
+        if emoji_font_enabled:
+            self.tm88iv_config["emoji_font_file"] = self.src_dir / self.config.get("printer_emoji_font","OpenMoji-black-glyf.ttf")
+
+        # 必要なファイルが存在するかチェック
+        for key, path in self.tm88iv_config.items():
+            if not os.path.exists(path):
+                self.show_error(f"必要なファイルが見つかりません: {path}", "ファイルエラー")
                 sys.exit(1)  # アプリケーションを終了
 
-        ## アイコンの設定
-        #image_data = base64.b64decode(icon_resource.icon_image)
-        #image = Image.open(BytesIO(image_data))
-        #icon  = ImageTk.PhotoImage(image)
-        #self.iconphoto(True, icon)  # アイコンを設定
-        #self.icon = icon
-        #self._icon_ref = icon  # TkinterDnD.Tkではiconを保持するために参照を保持する必要がある
+        # 絵文字の残りの設定を追加
+        if emoji_font_enabled:
+            self.tm88iv_config["emoji_font_size"] = self.config.get("printer_emoji_font_size", 20)  # 絵文字フォントサイズ
+            self.tm88iv_config["emoji_font_adjust_x"] = self.confi.get("printer_emoji_font_adjust_x",0) # 絵文字フォントのX座標調整
+            self.tm88iv_config["emoji_font_adjust_y"] = self.confi.get("printer_emoji_font_adjust_y",0) # 絵文字フォントのX座標調整
 
+        print("DEBUG:TM88IVクラス用設定:", self.tm88iv_config) # デバッグ用に設定を出力
         self.boldfont = ("Yu Gothic UI", 12, "bold")
 
         # グローバルホットキーの設定
-        threading.Thread(target=self.setup_hotkey, daemon=True).start()
-
+        self.setup_hotkey()
         # スタートアップモードを取得
         self.startup_mode = self.config.get("startup_mode", "form")  # デフォルトはフォーム表示
         # モード判定
         if self.startup_mode == "tray":
             self.withdraw()  # タスクトレイの場合はウィンドウを非表示にする
-
-        # アイコンを設定
-        #self.iconphoto(True, self.get_debug_tkinter_icon()) # TODO:アイコン変更
-        #self.iconbitmap("minicaptureprint.ico")  # アイコンを設定（.icoファイルを使用）
-
-
+        # アイコンの設定
         myappid = 'new.hatotank.minicaptureprint' # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-        try:
-            ico_path = os.path.abspath("minicaptureprint.ico")
-            self.iconbitmap(default=ico_path)  # アイコンを設定（.icoファイルを使用）
-            print(f"アイコンパス: {ico_path}")  # デバッグ用にアイコンパスを出力
-        except Exception as e:
-            print(f"アイコンのパス取得中にエラー: {e}")
-            self.tk.call('wm', 'iconbitmap', self._w, ico_path)  # アイコンが設定できない場合はエラーアイコンを使用
+        ico_path = os.path.abspath(self.src_dir / "minicaptureprint.ico")
+        self.iconbitmap(default=ico_path)  # アイコンを設定（.icoファイルを使用）
+        print(f"アイコンパス: {ico_path}")  # デバッグ用にアイコンパスを出力
 
         # 最小化イベントをバインド
         self.bind("<Unmap>", self.on_minimize)
@@ -296,21 +292,38 @@ class App(TkinterDnD.Tk):
         # ホットキー無効の為登録をスキップ
         if not enable_hotkey:
             return
-
-        # ホットキーの組み合わせを取得
-        hotkey_combination = self.config.get("hotkey_combination", "ctrl+alt+shift+c")
         try:
+            #raise Exception("テスト例外")  # テスト用の例外を発生させる
+            # ホットキーの組み合わせを取得
+            hotkey_combination = self.config.get("hotkey_combination", "ctrl+alt+shift+c")
+
+            #keyboard.clear_all_hotkeys()  # 既存のホットキーをクリア
+
+            #self.show_error(f"ホットキーの登録中にエラーが発生しました:\n{e}")
+
             # ホットキーを登録
             keyboard.add_hotkey(hotkey_combination, self.enqueue_capture_mode)
             print(f"ホットキー '{hotkey_combination}' が登録されました。")
+            #self.after(10000, self.setup_hotkey)
+            #raise Exception("テスト例外")  # テスト用の例外を発生させる
         except Exception as e:
+            #pass
             self.show_error(f"ホットキーの登録中にエラーが発生しました:\n{e}")
+
+
+    #def periodic_hotkey_check(self):
+    #    # ここでホットキーの再登録処理
+    #    print("ホットキーの再登録を実行")
+    #    keyboard.clear_all_hotkeys()  # 既存のホットキーをクリア
+    #    self.setup_hotkey()
+    #    self.after(10000, self.periodic_hotkey_check)  # 60秒ごとに再登録
 
 
     def enqueue_capture_mode(self):
         """
         画面キャプチャモードをキューに追加
         """
+        print("画面キャプチャモードをキューに追加")
         self.queue.put(self.start_rectangle_selection)
 
 
@@ -320,6 +333,7 @@ class App(TkinterDnD.Tk):
         """
         try:
             while not self.queue.empty():
+                print("キューから関数を取得して実行")
                 func = self.queue.get_nowait()
                 func()  # キューから取り出した関数を実行
         except queue.Empty:
@@ -356,11 +370,11 @@ class App(TkinterDnD.Tk):
         text_frame = Frame(self, width=498, height=512, highlightthickness=2, highlightbackground="black")
         text_frame.place(x=11, y=140)
         # キャンバス
-        self.line_info_canvas = Canvas(text_frame, width=60, bg="#f4f4f4", highlightthickness=0)
-        self.line_info_canvas.place(x=0, y=0, width=60, height=506)
+        self.line_info_canvas = Canvas(text_frame, width=64, bg="#f4f4f4", highlightthickness=0)
+        self.line_info_canvas.place(x=0, y=0, width=64, height=506)
         # テキスト入力フィールド
         self.text_widget = Text(text_frame, wrap="char", font=self.base_font)
-        self.text_widget.place(x=60, y=0, width=412, height=506)
+        self.text_widget.place(x=64, y=0, width=390, height=506)
         # スクロールバーを追加
         scrollbar = Scrollbar(text_frame, command=self.text_widget.yview)
         scrollbar.place(x=472, y=0, width=20, height=506)
@@ -461,8 +475,8 @@ class App(TkinterDnD.Tk):
 
         # 初期状態の更新
         self.update_hybrid_button_state()
-        hwnd = self.winfo_id() # ウィンドウハンドルを取得
-        print(f"Mainhwnd: {hwnd}")
+        #hwnd = self.winfo_id() # ウィンドウハンドルを取得
+        #print(f"Mainhwnd: {hwnd}")
 
 
     def toggle_tag(self, tag_name):
@@ -547,7 +561,7 @@ class App(TkinterDnD.Tk):
 
             # 警告色条件
             bg_color = "#f4f4f4" if vis_width <= (21 * 2) else "#ffeeba"  # フォントA(12×24)=42桁、漢字フォント(24×24)=21桁以内は通常色、それ以上は警告色(TM-T88IV基準)
-            self.line_info_canvas.create_rectangle(0, y, 60, y + 17, fill=bg_color, outline="")
+            self.line_info_canvas.create_rectangle(0, y, 64, y + 17, fill=bg_color, outline="")
             self.line_info_canvas.create_text(4, y+2, anchor="nw", text=f"{line_num:>2}",font=("Consolas", 9))
             self.line_info_canvas.create_text(32, y+2, anchor="nw", text=f"{vis_width:>2}", font=("Consolas", 9))
             i = self.text_widget.index(f"{i}+1line") # 次の行へ移動
@@ -1247,47 +1261,21 @@ class App(TkinterDnD.Tk):
         """
         テキストをサーマルプリンタで印字します。
         """
-        text = self.text_widget.get("1.0", "end").strip()  # 入力されたテキストを取得
-        #if not text.strip():
-        #    messagebox.showwarning("警告", "印字内容を入力してください。")
-        #    return
-
-        #try:
-            # PrinterHandlerを使用して印字
+        # チェック
         printer_ip = self.config.get("printer_ip", "")
         if not printer_ip:
             messagebox.showerror("エラー", "プリンターのIPアドレスが設定されていません。")
             return
 
-        print("プリンターIPアドレス:", printer_ip)  # デバッグ用
-        printer = PrinterHandler(printer_ip)
-        printer.print_text_with_tags(text_widget=self.text_widget,
-                                     image_path=self.processed_image,
-                                     enable_text_print=self.text_out_enabled,
-                                     enable_image_print=self.image_out_enabled,
-                                     should_cut_paper=self.paper_cut_enabled)
-            #printer.print_debug_text(text)  # 印字処理を実行
-            #printer.print_image(self.processed_image)  # 印字処理を実行
-            #messagebox.showinfo("成功", "印字が完了しました。")
-        #except Exception as e:
-        #    self.show_error(f"印字中にエラーが発生しました:\n{e}")
-
-
-#    def create_debug_image(self):
-#        """
-#        デバッグ用の画像を生成します。
-#        """
-#        image_data = base64.b64decode(icon_resource.icon_image)
-#        image = Image.open(BytesIO(image_data))
-#        return image
-
-    
-#    def get_debug_tkinter_icon(self):
-#        """
-#        Tkinter用のアイコンを取得します。
-#        """
-#        photo = ImageTk.PhotoImage(self.create_debug_image())
-#        return photo
+        try:
+            printer = PrinterHandler(ip_address=printer_ip, config=self.tm88iv_config)
+            printer.print_text_with_tags(text_widget=self.text_widget,
+                                         image_path=self.processed_image,
+                                         enable_text_print=self.text_out_enabled.get(),
+                                         enable_image_print=self.image_out_enabled.get(),
+                                         should_cut_paper=self.paper_cut_enabled.get())
+        except Exception as e:
+            self.show_error(f"印字中にエラーが発生しました:\n{e}")
 
 
     def start_thread_tray(self):
@@ -1298,7 +1286,7 @@ class App(TkinterDnD.Tk):
             MenuItem("フォームを表示", lambda: self.after(0, self.deiconify)),
             MenuItem("終了", lambda: self.after(0, self.stop_thread_tray))
         )
-        icon_image = Image.open("minicaptureprint.ico")
+        icon_image = Image.open(self.src_dir / "minicaptureprint.ico")
         self.icon = Icon("MiniCapturePrint", icon_image, "MiniCapturePrint", menu)
         self.icon.run()
 
