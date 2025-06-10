@@ -245,9 +245,6 @@ class App(TkinterDnD.Tk):
             self.tm88iv_config["emoji_font_adjust_x"] = self.confi.get("printer_emoji_font_adjust_x",0) # 絵文字フォントのX座標調整
             self.tm88iv_config["emoji_font_adjust_y"] = self.confi.get("printer_emoji_font_adjust_y",0) # 絵文字フォントのX座標調整
 
-        print("DEBUG:TM88IVクラス用設定:", self.tm88iv_config) # デバッグ用に設定を出力
-        self.boldfont = ("Yu Gothic UI", 12, "bold")
-
         # グローバルホットキーの設定
         self.setup_hotkey()
         # スタートアップモードを取得
@@ -256,17 +253,17 @@ class App(TkinterDnD.Tk):
         if self.startup_mode == "tray":
             self.withdraw()  # タスクトレイの場合はウィンドウを非表示にする
         # アイコンの設定
-        myappid = 'new.hatotank.minicaptureprint' # arbitrary string
+        myappid = 'net.hatotank.minicaptureprint' # アプリケーションIDを設定（Windowsのタスクトレイアイコン用）
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         ico_path = os.path.abspath(self.src_dir / "minicaptureprint.ico")
         self.iconbitmap(default=ico_path)  # アイコンを設定（.icoファイルを使用）
-        print(f"アイコンパス: {ico_path}")  # デバッグ用にアイコンパスを出力
 
         # 最小化イベントをバインド
         self.bind("<Unmap>", self.on_minimize)
         # 閉じるボタンのイベントをバインド
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        self.boldfont = ("Yu Gothic UI", 12, "bold")
         self.base_font = font.Font(family="MS Gothic", size=13)
         self.bold_font = font.Font(family="MS Gothic", size=13, weight="bold")
         self.italic_font = font.Font(family="MS Gothic", size=13, slant="italic")
@@ -293,30 +290,13 @@ class App(TkinterDnD.Tk):
         if not enable_hotkey:
             return
         try:
-            #raise Exception("テスト例外")  # テスト用の例外を発生させる
             # ホットキーの組み合わせを取得
             hotkey_combination = self.config.get("hotkey_combination", "ctrl+alt+shift+c")
-
-            #keyboard.clear_all_hotkeys()  # 既存のホットキーをクリア
-
-            #self.show_error(f"ホットキーの登録中にエラーが発生しました:\n{e}")
-
             # ホットキーを登録
             keyboard.add_hotkey(hotkey_combination, self.enqueue_capture_mode)
             print(f"ホットキー '{hotkey_combination}' が登録されました。")
-            #self.after(10000, self.setup_hotkey)
-            #raise Exception("テスト例外")  # テスト用の例外を発生させる
         except Exception as e:
-            #pass
             self.show_error(f"ホットキーの登録中にエラーが発生しました:\n{e}")
-
-
-    #def periodic_hotkey_check(self):
-    #    # ここでホットキーの再登録処理
-    #    print("ホットキーの再登録を実行")
-    #    keyboard.clear_all_hotkeys()  # 既存のホットキーをクリア
-    #    self.setup_hotkey()
-    #    self.after(10000, self.periodic_hotkey_check)  # 60秒ごとに再登録
 
 
     def enqueue_capture_mode(self):
@@ -475,8 +455,6 @@ class App(TkinterDnD.Tk):
 
         # 初期状態の更新
         self.update_hybrid_button_state()
-        #hwnd = self.winfo_id() # ウィンドウハンドルを取得
-        #print(f"Mainhwnd: {hwnd}")
 
 
     def toggle_tag(self, tag_name):
@@ -843,9 +821,8 @@ class App(TkinterDnD.Tk):
             self.image_tk = image_tk  # 参照を保持
             self.picture_canvas.config(scrollregion=self.picture_canvas.bbox(self.image_id))
 
+            # ドラッグ＆ドロップを有効化
             self.enable_image_drag()
-            # デバッグ
-            print(f"画像サイズ: {self.processed_image.size}, ディザリングモード: {self.dither_mode.get()}, コントラスト強調: {self.contrast_enabled.get()}, 反転: {self.image_invert_enabled.get()}")
 
         except Exception as e:
             self.show_error(f"画像の更新中にエラーが発生しました:\n{e}")
@@ -957,7 +934,7 @@ class App(TkinterDnD.Tk):
         """
         file_path = event.data.strip()  # ドロップされたファイルのパス
         file_path = os.path.normpath(file_path)  # パスを正規化
-        print(f"ドロップされたファイル: {file_path}")
+        #print(f"ドロップされたファイル: {file_path}")
 
         # ファイル名に空白を含と{}で返されるので除去
         if file_path.startswith('{') and file_path.endswith('}'):
