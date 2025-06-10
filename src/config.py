@@ -13,7 +13,6 @@ class ConfigHandler:
         # 文字列で渡された場合もPathに変換
         self.config_file = config_file if isinstance(config_file, Path) else Path(config_file)
         self.config_file = self.config_file.resolve()  # 絶対パスに変換
-        print(f"[INFO] 設定ファイルのパス: {self.config_file}")
         self.config = self.load_config()
 
 
