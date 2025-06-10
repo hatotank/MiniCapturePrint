@@ -774,8 +774,12 @@ class App(TkinterDnD.Tk):
             if self.original_image is None:
                 return
 
-            current_coords = self.picture_canvas.coords(self.image_id) if hasattr(self, 'image_id') else [0, 0]
-            current_x, current_y = current_coords if len(current_coords) == 2 else (0, 0)
+            # 新しい画像を読み込む場合は座標を初期化
+            if image is not None:
+                current_x, current_y = 0, 0
+            else:
+                current_coords = self.picture_canvas.coords(self.image_id) if hasattr(self, 'image_id') else [0, 0]
+                current_x, current_y = current_coords if len(current_coords) == 2 else (0, 0)
 
             # 引数の画像がNoneの場合はオリジナル画像を使用
             if image is None:
