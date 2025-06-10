@@ -42,8 +42,11 @@ STYLE_TAG_GROUPS = {
 def bayer_matrix(n):
     """
     Bayer マトリックスを生成
-    :param n: マトリクスのサイズ（2, 4, 8 のいずれか）
+
+    :param int n: マトリクスのサイズ（2, 4, 8 のいずれか）
     :return: Bayer マトリックス
+    :rtype: numpy.ndarray
+    :raises ValueError: 未対応のサイズの場合
     """
     if n == 1:
         return np.array([[0]])
@@ -60,12 +63,14 @@ def bayer_matrix(n):
 def random_matrix(n, seed=0):
     """
     random マトリックスを生成
-    :param n: マトリクスのサイズ（2, 4, 8 のいずれか）
-    :return: random マトリックス
+
+    :param int n: マトリクスのサイズ（2, 4, 8 のいずれか）
+    :param int seed: 乱数シード値
+    :return: 正規化されたランダムマトリックス
+    :rtype: numpy.ndarray
     """
     np.random.seed(seed)  # 再現性のためにシードを固定
     matrix = np.random.rand(n, n)
-    #return matrix
     flat = matrix.flatten()
     ranks = flat.argsort().argsort()  # ランク化（0〜n^2-1）
     normalized = ranks.reshape((n, n)) / (n * n)
@@ -77,8 +82,11 @@ def random_matrix(n, seed=0):
 def clustered_matrix(n):
     """
     クラスターマトリックスを生成
-    :param n: マトリクスのサイズ（2, 4, 8 のいずれか）
+
+    :param int n: マトリクスのサイズ（2, 4, 8 のいずれか）
     :return: クラスターマトリックス
+    :rtype: numpy.ndarray
+    :raises ValueError: 未対応のサイズの場合（2, 4, 8 のみ対応）
     """
     # 4x4クラスタマトリクス（Ulichney の方式ベース）
     base_4x4 = np.array([
@@ -112,13 +120,26 @@ def clustered_matrix(n):
 
 class InptDialog(simpledialog.Dialog):
     """
-    ダイアログボックスを表示するクラス
+    入力ダイアログボックスを表示するクラス。
     """
     def __init__(self, parent, title=None, prompt="入力してください:"):
+        """
+        ダイアログの初期化
+        :param parent: 親ウィジェット
+        :param str title: ダイアログのタイトル
+        :param str prompt: 入力を促すプロンプトメッセージ
+        """
         self.prompt = prompt
         super().__init__(parent, title)
 
     def body(self, master):
+        """
+        ダイアログの本体を作成
+
+        :param master: 親ウィジェット
+        :return: Entryウィジェット
+        :rtype: Entry
+        """
         win = self.winfo_toplevel()
         win.resizable(False, False)  # サイズ変更を無効化
         win.geometry("350x120")  # ウィンドウサイズを指定
@@ -130,6 +151,9 @@ class InptDialog(simpledialog.Dialog):
         return self.entry
 
     def apply(self):
+        """
+        OKボタン押下時の処理。入力値をself.resultに格納。
+        """
         self.result = self.entry.get()
 
     def buttonbox(self):
@@ -154,7 +178,9 @@ class App(TkinterDnD.Tk):
     def __init__(self, printer_image_max_width=PRINTER_IMAGE_MAX_WIDTH, printer_image_max_height=PRINTER_IMAGE_MAX_HEIGHT):
         """
         アプリケーションの初期化
-        設定を読み込み、起動モードに応じて動作を切り替え
+
+        :param int printer_image_max_width: プリンタ画像の最大幅
+        :param int printer_image_max_height: プリンタ画像の最大高さ
         """
         super().__init__() # TkinterDnD.Tk の初期化
         self.printer_image_max_width = printer_image_max_width
@@ -276,6 +302,9 @@ class App(TkinterDnD.Tk):
     def show_error(self, message, title="エラー"):
         """
         エラーメッセージを表示(共通ユーティリティ)
+
+        :param str message: エラーメッセージ
+        :param str title: ダイアログタイトル
         """
         func = inspect.currentframe().f_back.f_code.co_name
         messagebox.showerror(title, f"関数: {func}\n{message}")
@@ -419,11 +448,10 @@ class App(TkinterDnD.Tk):
         # 下側のデザイン
         # 設定ボタン
         Button(self, text="設定", command=self.open_settings).place(x=10, y=663, width=47, height=46)
-        # === デバッグボタン ===
+        # デバッグボタン
         Button(self, text="デバッグ", command=lambda: self.debug_print_text_with_tags(self.text_widget)).place(x=60, y=663, width=47, height=46)
 
         # テキスト印刷
-        #Button(self, text="テキスト印刷", command=self.print_text).place(x=110, y=663, width=80, height=46)
         self.checkbutton7 = Checkbutton(self, text="テキスト印刷", variable=self.text_out_enabled, command=self.update_preview)
         self.checkbutton7.place(x=680, y=666, width=84, height=16)
         # 画像印刷
@@ -489,6 +517,10 @@ class App(TkinterDnD.Tk):
 
 
     def debug_print_text_with_tags(self, text_widget):
+        """
+        テキストウィジェットの内容とタグ状態をデバッグ出力
+        :param text_widget: 対象のテキストウィジェット
+        """
         total_lines = int(text_widget.index("end-1c").split(".")[0])
         print("=" * 40)
         print("Text Widget 内容とタグ状態（デバッグ出力）")
@@ -512,6 +544,12 @@ class App(TkinterDnD.Tk):
 
 
     def get_visual_width(self, s):
+        """
+        文字列の可視幅を計算する
+
+        :param s: 対象の文字列
+        :return: 可視幅（全角文字は2、半角文字は1として計算）
+        """
         width = 0
         for ch in s:
             ea = unicodedata.east_asian_width(ch)
@@ -569,7 +607,9 @@ class App(TkinterDnD.Tk):
 
 
     def open_hybrid_settings(self):
-
+        """
+        ハイブリッドディザリングの詳細設定ウィンドウを開く
+        """
         if hasattr(self, 'hybrid_settings_window') and self.hybrid_settings_window.winfo_exists():
             # 既にウィンドウが存在する場合はフォーカスを当てる
             self.hybrid_settings_window.deiconify()  # ウィンドウを表示
@@ -674,12 +714,14 @@ class App(TkinterDnD.Tk):
         for rb in self.filter_radio_buttons:
             rb.config(state="normal" if enabled else "disabled")
 
+
     def hybrid_dithering(self, image, edge_threshold=128, dither_type=0, matrix_size=4, filter_type="FIND_EDGES", filter_enabled=True, random_seed=0):
         """
         ハイブリッドディザリングを適用
+
         :param image: 入力画像（Pillow Image オブジェクト）
         :param edge_threshold: 2値化のしきい値
-        :param matrix_size: Bayer マトリックスのサイズ
+        :param matrix_size: マトリックスのサイズ
         :return: ハイブリッドディザリング後の画像
         """
         # matrix_size確認
@@ -851,6 +893,7 @@ class App(TkinterDnD.Tk):
 
         # ウィンドウを再表示する
         self.deiconify()
+
 
     def on_mouse_press(self, event):
         """
