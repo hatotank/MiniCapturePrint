@@ -1,9 +1,10 @@
+from functools import lru_cache
+from pathlib import Path
 from tkinterdnd2 import DND_FILES, TkinterDnD
-from tkinter import Tk, Label, Text, Button, Entry, Scrollbar, Frame, Canvas, Toplevel, Radiobutton, IntVar, StringVar, Checkbutton,BooleanVar, Scale, LabelFrame, TclError, font, simpledialog, HORIZONTAL, messagebox
+from tkinter import Tk, Label, Text, Button, Entry, Scrollbar, Frame, Canvas, Toplevel, Radiobutton, IntVar, StringVar, Checkbutton, BooleanVar, Scale, LabelFrame, TclError, font, simpledialog, HORIZONTAL, messagebox
 from pystray import Icon, MenuItem, Menu
 from PIL import Image, ImageDraw, ImageTk, ImageGrab, ImageEnhance, ImageOps, ImageFilter
-from functools import lru_cache
-import json
+
 import re
 import sys
 import threading
@@ -14,9 +15,8 @@ import numpy as np
 import inspect
 import unicodedata
 import ctypes
-from pathlib import Path
 
-from config import ConfigHandler   # config.pyからのインポート
+from config import ConfigHandler # config.pyからのインポート
 from printer import PrinterHandler # printer.pyからのインポート
 from ui_settings import SettingsWindow # ui_settings.pyからのインポート
 
@@ -201,7 +201,7 @@ class App(TkinterDnD.Tk):
         self.src_dir = Path(__file__).parent.resolve()  # srcディレクトリのパスを取得
         self.config_manager = ConfigHandler(self.src_dir / "../config/config.json")
         self.config = self.config_manager.load_config()
-        print(f"設定ファイル読み込み完了1: {self.config}")
+        print(f"設定ファイル読み込み完了: {self.config}")
 
         # メインスレッドで処理を渡すためのキュー
         self.queue = queue.Queue()
@@ -303,7 +303,6 @@ class App(TkinterDnD.Tk):
         """
         画面キャプチャモードをキューに追加
         """
-        print("画面キャプチャモードをキューに追加")
         self.queue.put(self.start_rectangle_selection)
 
 
@@ -313,7 +312,6 @@ class App(TkinterDnD.Tk):
         """
         try:
             while not self.queue.empty():
-                print("キューから関数を取得して実行")
                 func = self.queue.get_nowait()
                 func()  # キューから取り出した関数を実行
         except queue.Empty:
@@ -474,7 +472,6 @@ class App(TkinterDnD.Tk):
 
         index = start
         all_have_tag = True
-        print(f"toggle_tag: {tag_name}, start: {start}, end: {end}, tag_category: {tag_category}")
         while self.text_widget.compare(index, "<", end):
             if tag_name not in self.text_widget.tag_names(index):
                 all_have_tag = False
@@ -691,13 +688,6 @@ class App(TkinterDnD.Tk):
             messagebox.showerror("エラー", f"関数: {current_function}\nmatrix_sizeは2のべき乗で無ければいけない")
             return
 
-        # デバッグ
-        print(f"edge_threshold: {edge_threshold}")
-        print(f"dither_typ: {dither_type}")
-        print(f"matrix_size: {matrix_size}")
-        print(f"filter_type: {filter_type}")
-        print(f"filter_enabled: {filter_enabled}")
-
         # グレースケールに変換
         image = image.convert("L")
         width, height = image.size
@@ -705,8 +695,6 @@ class App(TkinterDnD.Tk):
         if filter_enabled:
             # フィルタの設定を取得
             config_edge_detection = self.filter_map.get(filter_type, ImageFilter.FIND_EDGES)
-            # デバッグ
-            print(config_edge_detection)
             # フィルタを適用
             edges = image.filter(config_edge_detection)
             edge_pixels = np.array(edges, dtype=np.uint8)
@@ -721,7 +709,7 @@ class App(TkinterDnD.Tk):
             # random マトリックスを生成
             matrix = random_matrix(matrix_size, random_seed) * 255
         elif dither_type == 2:
-            # clustered マトリックスを生成
+            # clustered マトリクスを生成
             matrix = clustered_matrix(matrix_size) * 255
 
         matrix = np.tile(matrix, (height // matrix_size + 1, width // matrix_size + 1))
@@ -934,7 +922,6 @@ class App(TkinterDnD.Tk):
         """
         file_path = event.data.strip()  # ドロップされたファイルのパス
         file_path = os.path.normpath(file_path)  # パスを正規化
-        #print(f"ドロップされたファイル: {file_path}")
 
         # ファイル名に空白を含と{}で返されるので除去
         if file_path.startswith('{') and file_path.endswith('}'):
@@ -942,7 +929,6 @@ class App(TkinterDnD.Tk):
 
         # 画像ファイルかどうかを確認
         if not file_path.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif')):
-            print(file_path.lower())
             messagebox.showerror("エラー", "画像ファイルをドロップしてください。")
             return
 
@@ -1034,11 +1020,6 @@ class App(TkinterDnD.Tk):
             # 画像を移動
             self.picture_canvas.move(self.image_id, dx, dy)
 
-            # デバッグ
-            print(f"current_x: {current_x}, current_y: {current_y}")
-            print(f"new_x: {new_x}, new_y: {new_y}")
-            print(f"dx: {dx}, dy: {dy}")
-
             # ドラッグ開始位置を更新
             self.drag_start_x = event.x
             self.drag_start_y = event.y
@@ -1058,11 +1039,9 @@ class App(TkinterDnD.Tk):
             if self.rotate_load_enabled.get():
                 if self.config.get("rotate_direction", "clockwise") == "clockwise":
                     # 時計回りに90度回転
-                    print("時計回りに90度回転")
                     screenshot = screenshot.rotate(-90, expand=True)
                 else:
                     # 反時計回りに90度回転
-                    print("反時計回りに90度回転")
                     screenshot = screenshot.rotate(90, expand=True)
             # 元の画像を保存
             self.original_image = screenshot.copy()
@@ -1070,7 +1049,6 @@ class App(TkinterDnD.Tk):
             self.update_preview(screenshot)
 
         except Exception as e:
-            print(f"エラー内容: {e}")
             messagebox.showerror("エラー(take_screenshot)", f"スクリーンショットの取得中にエラーが発生しました:\n{e}")
 
 
@@ -1080,7 +1058,6 @@ class App(TkinterDnD.Tk):
 
 
     def apply_barcode_tags(self):
-        print("apply_barcode_tags")
         content = self.text_widget.get("1.0", "end-1c")
         for bc in BARCODE_TAGS.values():
             self.text_widget.tag_remove(bc["tag"], "1.0", "end")
@@ -1088,8 +1065,6 @@ class App(TkinterDnD.Tk):
                 start = f"1.0+{match.start()}c"
                 end   = f"1.0+{match.end()}c"
                 self.text_widget.tag_add(bc["tag"], start, end)
-                print(f"start: {start}, end: {end}")
-                print(f"match: {match.group(0)}")
 
     def reapply_alignment_tags(self):
         """
