@@ -8,6 +8,13 @@ class PrinterHandler:
     プリンタを操作するクラス
     """
     def __init__(self, ip_address, media_width=512, config=None):
+        """
+        プリンタの初期化
+
+        :param ip_address: プリンタのIPアドレス
+        :param media_width: メディアの幅（ピクセル単位）
+        :param config: 設定オブジェクト（オプション）
+        """
         # プリンタの初期化
         self.tm_print = TM88IV(ip_address, config=config) 
         # プリンタのメディア幅を設定(python-escpos ver3.1にて確認
@@ -58,19 +65,20 @@ class PrinterHandler:
                             isprinted = True  # 印刷フラグを設定
                         # バーコード：ITFコード
                         if arg_type == "itf":
-                            self.tm_print.barcode(arg_command, bc="ITF", align_ct = False)
+                            self.tm_print.barcode(arg_command, bc="ITF", align_ct = False, width=2)
                             isprinted = True  # 印刷フラグを設定
                         # バーコード：EANコード
                         if arg_type == "ean":
-                            self.tm_print.barcode(arg_command, bc="EAN13", align_ct = False)
+                            self.tm_print.barcode(arg_command, bc="EAN13", align_ct = False, width=2)
                             isprinted = True  # 印刷フラグを設定
                         # バーコード：Code39コード
                         if arg_type == "c39":
-                            self.tm_print.barcode(arg_command, bc="CODE39", align_ct = False)
+                            self.tm_print.barcode(arg_command, bc="CODE39", align_ct = False, width=2)
                             isprinted = True  # 印刷フラグを設定
                         # バーコード：Code128コード
                         if arg_type == "c128":
-                            self.tm_print.barcode(arg_command, bc="CODE128", align_ct = False)
+                            # CODE128は(SHIFT or CODE A or CODE B or CODE C)の内、CODE Bを使用
+                            self.tm_print.barcode("{B" + arg_command, bc="CODE128", align_ct = False, function_type="B", width=2)
                             isprinted = True  # 印刷フラグを設定
                         # 他のコマンド
                         if arg_type == "row":
