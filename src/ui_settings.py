@@ -44,6 +44,9 @@ class SettingsWindow(Toplevel):
         self.create_widgets()
         self.load_config()
 
+        # 初期値の設定
+        self.image_max_height.config(state="disabled") # 画像の縦幅はpython-escposにて分割されるため
+
     def on_close(self):
         """
         ウィンドウを閉じるときの処理
