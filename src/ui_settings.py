@@ -3,9 +3,13 @@ import ipaddress
 import re
 
 class SettingsWindow(Toplevel):
+    """
+    設定ウィンドウクラス
+    """
     def __init__(self, master, config):
         """
         設定ウィンドウの初期化
+
         :param master: 親ウィンドウ
         :param config: 設定データ
         """
@@ -20,6 +24,7 @@ class SettingsWindow(Toplevel):
         # ウィンドウを閉じるときの処理
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        # 設定データ
         self.config_data = config
         self.printer_ip = StringVar()
         self.printer_port = StringVar()
@@ -35,9 +40,9 @@ class SettingsWindow(Toplevel):
         self.printer_emoji_font_adjust_x = StringVar()
         self.printer_emoji_font_adjust_y = StringVar()
 
+        # ウィジェットの作成
         self.create_widgets()
         self.load_config()
-
 
     def on_close(self):
         """
@@ -46,7 +51,6 @@ class SettingsWindow(Toplevel):
         # 最前面属性を解除
         self.attributes("-topmost", False)
         self.destroy()
-
 
     def create_widgets(self):
         """
@@ -134,7 +138,6 @@ class SettingsWindow(Toplevel):
         # ボタン配置
         Button(self, text="保存", command=self.save_config).place(x=510, y=18, width=100, height=30)
         Button(self, text="キャンセル", command=self.destroy).place(x=510, y=58, width=100, height=30)
-
 
     def load_config(self):
         """
@@ -241,7 +244,6 @@ class SettingsWindow(Toplevel):
         # 絵文字フォント設定の有効/無効を切り替え
         self._toggle_emoji_settings()
 
-
     def save_config(self):
         """
         設定値を保存するメソッド
@@ -283,7 +285,6 @@ class SettingsWindow(Toplevel):
         # ウィンドウを閉じる
         self.destroy()
 
-
     def validate_inputs(self, silent=False):
         """
         入力値のバリデーションを行うメソッド
@@ -307,6 +308,8 @@ class SettingsWindow(Toplevel):
     def _validate_ip(self, silent):
         """
         IPアドレスの検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         try:
             ipaddress.ip_address(self.printer_ip.get())
@@ -319,6 +322,8 @@ class SettingsWindow(Toplevel):
     def _validate_port(self, silent):
         """
         ポート番号の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         try:
             port = int(self.printer_port.get())
@@ -335,6 +340,8 @@ class SettingsWindow(Toplevel):
     def _validate_max_image_width(self, silent):
         """
         最大画像幅(横)の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if not self.image_max_width.get().isdigit(): 
             if not silent:
@@ -345,6 +352,8 @@ class SettingsWindow(Toplevel):
     def _validate_max_image_height(self, silent):
         """
         最大画像幅(縦)の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if not self.image_max_height.get().isdigit(): 
             if not silent:
@@ -355,6 +364,8 @@ class SettingsWindow(Toplevel):
     def _validate_startup_mode(self, silent):
         """
         起動モードの検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if self.startup_mode.get() not in ["form", "tray"]:
             if not silent:
@@ -365,6 +376,8 @@ class SettingsWindow(Toplevel):
     def _validate_hotkey_enabled(self, silent):
         """
         ホットキー有効化の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if not isinstance(self.hotkey_enabled.get(), bool):
             if not silent:
@@ -375,6 +388,8 @@ class SettingsWindow(Toplevel):
     def _validate_hotkey_combination(self, silent):
         """
         ホットキー組み合わせの検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if not self.hotkey_enabled.get():
             return True # ホットキー無効化時は検証しない
@@ -389,6 +404,8 @@ class SettingsWindow(Toplevel):
     def _validate_rotate_direction(self, silent):
         """
         キャプチャ時の回転方向の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if self.rotate_direction.get() not in ["clockwise", "counterclockwise"]:
             if not silent:
@@ -399,6 +416,8 @@ class SettingsWindow(Toplevel):
     def _validate_emoji_enabled(self, silent):
         """
         絵文字フォント変更有効化の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if not isinstance(self.emoji_font_enabled.get(), bool):
             if not silent:
@@ -409,6 +428,8 @@ class SettingsWindow(Toplevel):
     def _validate_emoji_font_file(self, silent):
         """
         絵文字フォントファイルの検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         if self.emoji_font_enabled.get() and not self.printer_emoji_font.get().isspace():
             if not silent:
@@ -419,6 +440,8 @@ class SettingsWindow(Toplevel):
     def _validate_emoji_font_size(self, silent):
         """
         絵文字フォントサイズの検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         try:
             size = int(self.printer_emoji_font_size.get())
@@ -433,6 +456,8 @@ class SettingsWindow(Toplevel):
     def _validate_emoji_font_adjust_x(self, silent):
         """
         絵文字フォント位置調節(X座標)の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         try:
             adjust_x = int(self.printer_emoji_font_adjust_x.get())
@@ -445,6 +470,8 @@ class SettingsWindow(Toplevel):
     def _validate_emoji_font_adjust_y(self, silent):
         """
         絵文字フォント位置調節(Y座標)の検証
+
+        :param silent: エラーメッセージを表示しない場合はTrue
         """
         try:
             adjust_y = int(self.printer_emoji_font_adjust_y.get())

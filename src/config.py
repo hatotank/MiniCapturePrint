@@ -63,7 +63,6 @@ class ConfigHandler:
         """
         return self.config.get(key, default)
 
-
     def set(self, key, value):
         """
         設定を更新
