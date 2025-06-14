@@ -32,6 +32,15 @@ BARCODE_TAGS = {
     "B128":  {"pattern": r"<B128:(.+?)>",  "tag": "b128_tag", "bg": "#fff3e0", "fg": "#a63d00"},
 }
 
+# 色付け用タグ（配置用タグとは分離）
+CUSTOM_TAGS = {
+    "HR": {"pattern": r"<HR>", "tag": "hr_tag", "bg": "#E0E0E0", "fg": "#757575"},
+    "ALIGN_CENTER_COLOR": {"pattern": r"<ALIGN:CENTER>", "tag": "align_center_color", "bg": "#90CAF9", "fg": "#1976D2"},
+    "ALIGN_LEFT_COLOR":   {"pattern": r"<ALIGN:LEFT>",   "tag": "align_left_color",   "bg": "#A5D6A7", "fg": "#388E3C"},
+    "ALIGN_RIGHT_COLOR":  {"pattern": r"<ALIGN:RIGHT>",  "tag": "align_right_color",  "bg": "#FFE0B2", "fg": "#BF360C"},
+}
+
+# タグのグループ化
 STYLE_TAG_GROUPS = {
     "size": ["bold", "four", "vert"],
     "decoration": ["underline", "invert"]
@@ -125,6 +134,7 @@ class InptDialog(simpledialog.Dialog):
     def __init__(self, parent, title=None, prompt="入力してください:"):
         """
         ダイアログの初期化
+
         :param parent: 親ウィジェット
         :param str title: ダイアログのタイトル
         :param str prompt: 入力を促すプロンプトメッセージ
@@ -193,11 +203,13 @@ class App(TkinterDnD.Tk):
         self.widthforce_mode = BooleanVar(value=True) # 横幅固定の有効/無効
         self.rotate_load_enabled = BooleanVar(value=False) # 読込時90°回転の有効/無効
         self.auto_enlarge_enabled = BooleanVar(value=False) # 小さい画像を拡大の有効/無効
+        self.alpha_channel_enabled = BooleanVar(value=True) # アルファチャンネルを白で合成の有効/無効
         self.contrast_enabled = BooleanVar(value=False) # コントラスト強調の有効/無効
         self.image_invert_enabled = BooleanVar(value=False) # 反転の有効/無効
         self.paper_cut_enabled = BooleanVar(value=True) # 用紙カットの有効/無効
         self.image_out_enabled = BooleanVar(value=True) # 画像印刷の有効/無効
         self.text_out_enabled = BooleanVar(value=True) # テキスト印刷の有効/無効
+        self._is_handling_modified = False  # テキストウィジェットの変更を処理中かどうか
 
         self.filter_map = {
             "FIND_EDGES": ImageFilter.FIND_EDGES,
@@ -227,7 +239,6 @@ class App(TkinterDnD.Tk):
         self.src_dir = Path(__file__).parent.resolve()  # srcディレクトリのパスを取得
         self.config_manager = ConfigHandler(self.src_dir / "../config/config.json")
         self.config = self.config_manager.load_config()
-        print(f"設定ファイル読み込み完了: {self.config}")
 
         # メインスレッドで処理を渡すためのキュー
         self.queue = queue.Queue()
@@ -257,7 +268,7 @@ class App(TkinterDnD.Tk):
         # 絵文字フォント変更有効化している場合は、設定からフォントファイルを取得して設定
         emoji_font_enabled = self.config.get("printer_emoji_font_enabled", False)
         if emoji_font_enabled:
-            self.tm88iv_config["emoji_font_file"] = self.src_dir / self.config.get("printer_emoji_font","OpenMoji-black-glyf.ttf")
+            self.tm88iv_config["emoji_font_file"] = self.src_dir / "../fonts" / self.config.get("printer_emoji_font","OpenMoji-black-glyf.ttf")
 
         # 必要なファイルが存在するかチェック
         for key, path in self.tm88iv_config.items():
@@ -268,11 +279,14 @@ class App(TkinterDnD.Tk):
         # 絵文字の残りの設定を追加
         if emoji_font_enabled:
             self.tm88iv_config["emoji_font_size"] = self.config.get("printer_emoji_font_size", 20)  # 絵文字フォントサイズ
-            self.tm88iv_config["emoji_font_adjust_x"] = self.confi.get("printer_emoji_font_adjust_x",0) # 絵文字フォントのX座標調整
-            self.tm88iv_config["emoji_font_adjust_y"] = self.confi.get("printer_emoji_font_adjust_y",0) # 絵文字フォントのX座標調整
+            self.tm88iv_config["emoji_font_adjust_x"] = self.config.get("printer_emoji_font_adjust_x",0) # 絵文字フォントのX座標調整
+            self.tm88iv_config["emoji_font_adjust_y"] = self.config.get("printer_emoji_font_adjust_y",0) # 絵文字フォントのX座標調整
 
         # グローバルホットキーの設定
-        self.setup_hotkey()
+        enable_hotkey = self.config.get("hotkey_enabled", True)
+        # ホットキーが有効な場合は設定
+        if enable_hotkey:
+            self.setup_hotkey()
         # スタートアップモードを取得
         self.startup_mode = self.config.get("startup_mode", "form")  # デフォルトはフォーム表示
         # モード判定
@@ -314,16 +328,11 @@ class App(TkinterDnD.Tk):
         """
         グローバルホットキーを設定
         """
-        enable_hotkey = self.config.get("enable_hotkey", True)
-        # ホットキー無効の為登録をスキップ
-        if not enable_hotkey:
-            return
         try:
             # ホットキーの組み合わせを取得
             hotkey_combination = self.config.get("hotkey_combination", "ctrl+alt+shift+c")
             # ホットキーを登録
             keyboard.add_hotkey(hotkey_combination, self.enqueue_capture_mode)
-            print(f"ホットキー '{hotkey_combination}' が登録されました。")
         except Exception as e:
             self.show_error(f"ホットキーの登録中にエラーが発生しました:\n{e}")
 
@@ -403,10 +412,13 @@ class App(TkinterDnD.Tk):
         self.checkbutton3.place(x=10, y=10, width=86, height=16)
         # ラベルフレーム：チェックボックス：読込時回転
         self.checkbutton4 = Checkbutton(options_frame, text="読込時90°回転", variable=self.rotate_load_enabled)
-        self.checkbutton4.place(x=10, y=36, width=96, height=16)
+        self.checkbutton4.place(x=10, y=34, width=96, height=16)
         # ラベルフレーム：チェックボックス：小さい画像を拡大
         self.checkbutton5 = Checkbutton(options_frame, text="小さい画像を拡大", variable=self.auto_enlarge_enabled)
-        self.checkbutton5.place(x=10, y=62, width=106, height=16)
+        self.checkbutton5.place(x=10, y=60, width=106, height=16)
+        # アルファチャンネルを白で合成
+        self.checkbutton8 = Checkbutton(options_frame, text="アルファチャンネルを白で合成", variable=self.alpha_channel_enabled)
+        self.checkbutton8.place(x=10, y=84, width=154, height=16)
         # キャプチャボタン
         Button(options_frame, text="画面\nキャプチャ", command=self.start_rectangle_selection).place(x=122, y=10, width=80, height=46)
 
@@ -461,16 +473,16 @@ class App(TkinterDnD.Tk):
         self.checkbutton1 = Checkbutton(self, text="用紙カット", variable=self.paper_cut_enabled, command=self.update_preview)
         self.checkbutton1.place(x=780, y=692, width=80, height=16)
         # 印字ボタン
-        Button(self, text="印刷", font=self.boldfont, command=self.print_debug_text).place(x=886, y=663, width=147, height=46)
+        Button(self, text="印刷", font=self.boldfont, command=self.print).place(x=886, y=663, width=147, height=46)
 
         # タグ定義
         # バーコードタグの設定
         for bc in BARCODE_TAGS.values():
             self.text_widget.tag_config(bc["tag"], background=bc["bg"], foreground=bc["fg"])
+        # カスタムタグの設定
+        for ct in CUSTOM_TAGS.values():
+            self.text_widget.tag_config(ct["tag"], background=ct["bg"], foreground=ct["fg"])
         # 整形用タグの設定
-        self.text_widget.tag_configure("algn_left", justify="left")
-        self.text_widget.tag_configure("algn_center", justify="center")
-        self.text_widget.tag_configure("algn_right", justify="right")
         self.text_widget.tag_configure("bold", font=self.bold_font)
         self.text_widget.tag_configure("underline", underline=1)
         self.text_widget.tag_configure("invert", foreground="white", background="black")
@@ -519,6 +531,7 @@ class App(TkinterDnD.Tk):
     def debug_print_text_with_tags(self, text_widget):
         """
         テキストウィジェットの内容とタグ状態をデバッグ出力
+
         :param text_widget: 対象のテキストウィジェット
         """
         total_lines = int(text_widget.index("end-1c").split(".")[0])
@@ -583,9 +596,21 @@ class App(TkinterDnD.Tk):
     def _on_text_modified(self, event):
         """
         テキストウィジェットの内容が変更されたときに呼び出されるイベントハンドラ
+
+        :param event: イベントオブジェクト
+        :type event: Event
         """
-        self.text_widget.edit_modified(False)
-        self.reapply_alignment_tags()
+        if self._is_handling_modified:
+            return
+        self._is_handling_modified = True
+
+        widget = event.widget
+        if widget.edit_modified():
+            self.text_widget.edit_modified(False)
+            #print("テキストウィジェットの内容が変更されました。-----")
+            self.reapply_alignment_tags()
+
+        self._is_handling_modified = False
 
 
     def update_hybrid_button_state(self):
@@ -795,6 +820,10 @@ class App(TkinterDnD.Tk):
 
             # RGBAモードの場合はRGBに変換
             if image.mode == "RGBA":
+                if self.alpha_channel_enabled.get():
+                    background = Image.new("RGB", image.size, (255, 255, 255))  # 白背景
+                    background.paste(image, mask=image.split()[-1])
+                    image = background
                 image = image.convert("RGB")
 
             # 画像の幅と高さを取得
@@ -1116,24 +1145,80 @@ class App(TkinterDnD.Tk):
         self.text_widget.tag_remove("align_left", "1.0", "end")
         self.text_widget.tag_remove("align_center", "1.0", "end")
         self.text_widget.tag_remove("align_right", "1.0", "end")
+        # 既存の配置タグ・色タグを一旦削除
+        for tag_info in CUSTOM_TAGS.values():
+            self.text_widget.tag_remove(tag_info["tag"], "1.0", "end")
+            # 配置用タグ（例: align_left, align_center, align_right）も必要に応じて削除
+            align_tag = tag_info["tag"].replace("_color", "")
+            self.text_widget.tag_remove(align_tag, "1.0", "end")
 
         lines = self.text_widget.get("1.0", "end-1c").splitlines()
         current_align = "align_left"  # デフォルトは左寄せ
         line_number = 1
 
+        # カスタムタグの色を設定
+        #for tag_info in CUSTOM_TAGS.values():
+        #    keyword = tag_info["pattern"]
+        #    tag = tag_info["tag"]
+        #    start = "1.0"
+        #    while True:
+        #        pos = self.text_widget.search(keyword, start, stopindex="end")
+        #        if not pos:
+        #            break
+        #        end = f"{pos}+{len(keyword)}c"
+        #        self.text_widget.tag_add(tag, pos, end)
+        #        start = end
+
+        line_count = int(self.text_widget.index("end-1c").split('.')[0])
+        for i in range(1, line_count + 1):
+            line_start = f"{i}.0"
+            line_end = f"{i}.end"
+            line_text = self.text_widget.get(line_start, line_end)
+
+            for tag_info in CUSTOM_TAGS.values():
+                pattern = tag_info["pattern"]
+                if line_text.startswith(pattern):
+                    tag_len = len(pattern)
+                    tag_name = tag_info["tag"]
+                    # タグ設定（既に設定済みなら上書きでもOK）
+                    self.text_widget.tag_configure(
+                        tag_name,
+                        background=tag_info["bg"],
+                        foreground=tag_info["fg"]
+                    )
+                    # 先頭部分にタグを付与
+                    self.text_widget.tag_add(
+                        tag_name,
+                        line_start,
+                        f"{line_start}+{tag_len}c"
+                    )
+                    break  # 1行に複数のALIGNタグが先頭に来ることはない前提
+
+        # 各先頭行に <ALIGN:...> タグのパターン
+        pattern = r"^<ALIGN:(LEFT|CENTER|RIGHT)>"
+        # 各行を確認してタグを適用
         for line in lines:
-            #tag_line = line.strip().lower()
             tag_line = line
-            if tag_line == "<ALIGN:LEFT>":
-                print("<ALIGN:LEFT> タグが見つかりました。現在の行番号:", line_number) # デバッグ
-                current_align = "align_left"
-            elif tag_line == "<ALIGN:CENTER>":
-                print("<ALIGN:CENTER> タグが見つかりました。現在の行番号:", line_number) # デバッグ
-                current_align = "align_center"
-            elif tag_line == "<ALIGN:RIGHT>":
-                print("<ALIGN:RIGHT> タグが見つかりました。現在の行番号:", line_number) # デバッグ
-                current_align = "align_right"
-            #else:
+            # 現在の行のタグを確認
+            for match in re.finditer(pattern, tag_line):
+                align_type = match.group(1)
+                if align_type == "LEFT":
+                    current_align = "align_left"
+                    #keyword = "<ALIGN:LEFT>"
+                    #end = f"{line_number}+{len(keyword)-2}c"
+                    #line_end = f"{line_number}.end"
+                    #print(f"Line {line_end}: line_end")
+                    #elf.text_widget.tag_add("align_center_color", f"{line_number}.0",end)
+                    #self.text_widget.tag_add("align_center_color", f"{line_number}.0", f"{6}.c")
+                    print(f"Line {line_number}: align left")
+                elif align_type == "CENTER":
+                    current_align = "align_center"
+                    #self.text_widget.tag_add("align_center_color", f"{line_number}.0", f"{6}.c")
+                    print(f"Line {line_number}: align center")
+                elif align_type == "RIGHT":
+                    current_align = "align_right"
+                    print(f"Line {line_number}: align right")
+
             self.text_widget.tag_add(current_align, f"{line_number}.0", f"{line_number}.end")
             line_number += 1
 
@@ -1256,9 +1341,9 @@ class App(TkinterDnD.Tk):
         self.reapply_alignment_tags()
 
 
-    def print_debug_text(self):
+    def print(self):
         """
-        テキストをサーマルプリンタで印字します。
+        サーマルプリンタで印字します。
         """
         # チェック
         printer_ip = self.config.get("printer_ip", "")
