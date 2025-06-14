@@ -1,6 +1,5 @@
-import sys
-from pathlib import Path
 import re
+import logging
 from tm88iv.tm88iv import TM88IV
 
 class PrinterHandler:
@@ -19,7 +18,9 @@ class PrinterHandler:
         self.tm_print = TM88IV(ip_address, config=config) 
         # プリンタのメディア幅を設定(python-escpos ver3.1にて確認
         self.tm_print.profile.profile_data['media']['width']['pixels'] = media_width
-        #self.text_included = False  # テキスト印刷フラグ
+
+        # ログ設定
+        self.logger = logging.getLogger(__name__)
 
     def print_text_with_tags(self, text_widget, image_path=None, enable_text_print=False, enable_image_print=False, should_cut_paper=False):
         """
@@ -45,68 +46,66 @@ class PrinterHandler:
             text_included = True
 
         if debug_print_enabled:
-            print(f"=== 印刷開始 ===")
-            print(f"テキスト印刷: {enable_text_print}, 画像印刷: {enable_image_print}, 用紙カット: {should_cut_paper}")
-            print(f"テキスト含むか: {text_included}")
-            print(f"画像パス: {image_path if image_path else 'なし'}")
-            try:
-                self.tm_print.open()
+            self.logger.setLevel(logging.INFO)  # デバッグ時 INFO --> DEBUG
+            self.logger.debug(f"=== 印刷開始 ===")
+            self.logger.debug(f"テキスト印刷: {enable_text_print}, 画像印刷: {enable_image_print}, 用紙カット: {should_cut_paper}")
+            self.logger.debug(f"テキスト含むか: {text_included}")
+            self.logger.debug(f"画像パス: {image_path if image_path else 'なし'}")
 
-                if enable_text_print and text_included:
-                    for arg_type, arg_command, arg_dict in commands:
-                        print(f"コマンド: {arg_type}, 引数: {arg_command}, オプション: {arg_dict}")
-                        # 絵文字対応日本語出力
-                        if arg_type == "jp2":
-                            self.tm_print.jptext2(arg_command, **arg_dict)
-                            isprinted = True  # 印刷フラグを設定
-                        # バーコード：QRコード
-                        if arg_type == "qr":
-                            self.tm_print.qr(arg_command, native=True)
-                            isprinted = True  # 印刷フラグを設定
-                        # バーコード：ITFコード
-                        if arg_type == "itf":
-                            self.tm_print.barcode(arg_command, bc="ITF", align_ct = False, width=2)
-                            isprinted = True  # 印刷フラグを設定
-                        # バーコード：EANコード
-                        if arg_type == "ean":
-                            self.tm_print.barcode(arg_command, bc="EAN13", align_ct = False, width=2)
-                            isprinted = True  # 印刷フラグを設定
-                        # バーコード：Code39コード
-                        if arg_type == "c39":
-                            self.tm_print.barcode(arg_command, bc="CODE39", align_ct = False, width=2)
-                            isprinted = True  # 印刷フラグを設定
-                        # バーコード：Code128コード
-                        if arg_type == "c128":
-                            # CODE128は(SHIFT or CODE A or CODE B or CODE C)の内、CODE Bを使用
-                            self.tm_print.barcode("{B" + arg_command, bc="CODE128", align_ct = False, function_type="B", width=2)
-                            isprinted = True  # 印刷フラグを設定
-                        # 他のコマンド
-                        if arg_type == "row":
-                            self.tm_print._raw(arg_command)
+            # プリンタを開く
+            self.tm_print.open()
 
-                if enable_image_print and image_path:
-                    print(f"画像を印刷: {image_path}")
-                    self.tm_print.image(image_path)
-                    isprinted = True  # 画像印刷フラグを設定
+            if enable_text_print and text_included:
+                for arg_type, arg_command, arg_dict in commands:
+                    self.logger.debug(f"コマンド: {arg_type}, 引数: {arg_command}, オプション: {arg_dict}")
+                    # 絵文字対応日本語出力
+                    if arg_type == "jp2":
+                        self.tm_print.jptext2(arg_command, **arg_dict)
+                        isprinted = True  # 印刷フラグを設定
+                    # バーコード：QRコード
+                    if arg_type == "qr":
+                        self.tm_print.qr(arg_command, native=True)
+                        isprinted = True  # 印刷フラグを設定
+                    # バーコード：ITFコード
+                    if arg_type == "itf":
+                        self.tm_print.barcode(arg_command, bc="ITF", align_ct=False, width=2)
+                        isprinted = True  # 印刷フラグを設定
+                    # バーコード：EANコード
+                    if arg_type == "ean":
+                        self.tm_print.barcode(arg_command, bc="EAN13", align_ct=False, width=2)
+                        isprinted = True  # 印刷フラグを設定
+                    # バーコード：Code39コード
+                    if arg_type == "c39":
+                        self.tm_print.barcode(arg_command, bc="CODE39", align_ct=False, width=2)
+                        isprinted = True  # 印刷フラグを設定
+                    # バーコード：Code128コード
+                    if arg_type == "c128":
+                        # CODE128は(SHIFT or CODE A or CODE B or CODE C)の内、CODE Bを使用
+                        self.tm_print.barcode("{B" + arg_command, bc="CODE128", align_ct=False, function_type="B", width=2)
+                        isprinted = True  # 印刷フラグを設定
+                    # 他のコマンド
+                    if arg_type == "row":
+                        self.tm_print._raw(arg_command)
 
-                if isprinted and should_cut_paper:
-                    print("用紙をカットします")
-                    self.tm_print.cut()  # カットコマンドを送信
+            if enable_image_print and image_path:
+                self.logger.debug(f"画像を印刷: {image_path}")
+                self.tm_print.image(image_path, center=False)
+                isprinted = True  # 画像印刷フラグを設定
 
-                print("=== 印刷完了 ===")
+            if isprinted and should_cut_paper:
+                self.logger.debug("用紙をカットします")
+                self.tm_print.cut()  # カットコマンドを送信
 
-            except Exception as e:
-                print(f"プリンタエラー: {e}")
+            self.logger.debug("=== 印刷完了 ===")
 
-            finally:
-                self.tm_print.close()  # プリンタを閉じる
+            # プリンタを閉じる
+            self.tm_print.close()
 
 
 class TextTagParser:
     """
     タグ付きテキストを解析し、TM88IVのエスケープコマンドに変換するクラス
     """
-
     def __init__(self, text_widget):
         """
         タグ付きテキストを解析するクラスの初期化
@@ -128,7 +127,7 @@ class TextTagParser:
         self.blocks_per_line = self._get_line_tag_blocks()
         # タグブロックをESC/POSコマンドに変換
         self.esc_commands = self._convert_line_to_esc()
-
+        # 変換結果を返す
         return self.esc_commands
 
     def _get_line_tag_blocks(self):
@@ -159,8 +158,11 @@ class TextTagParser:
 
     def _compress_tagged_segments(self, segments):
         """
-        タグ付きセグメントを圧縮する
+        タグ付きセグメントを圧縮する\n
         連続する同じタグの文字列を1つにまとめる
+
+        :param segments: (文字, タグ)のリスト
+        :return: 圧縮された(文字, タグ)のリスト
         """
         if not segments:
             return []
@@ -180,8 +182,12 @@ class TextTagParser:
         compressed.append((current_text, current_tags))
         return compressed
 
-
     def _convert_line_to_esc(self):
+        """
+        各行のタグブロックをTM88IVのエスケープコマンドに変換
+        :return: エスケープコマンドのリスト
+        """
+        # エスケープコマンドのリスト
         commands = []
 
         # 初期位置は左
@@ -193,7 +199,6 @@ class TextTagParser:
             for text, tags in line_blocks:
                 is_text = True  # テキストかどうかのフラグ
                 jptext2_args_dict = {"bflg": True}
-                print(f"'{text}' ---> {tags}")
 
                 # 左寄せ、中央寄せ、右寄せ
                 if "align_left" in tags and re.search(r"<ALIGN:LEFT>", text):
@@ -214,7 +219,6 @@ class TextTagParser:
                 # バーコード：QRコード
                 if "qr_tag" in tags and re.search(r"<QR:[^>]+>", text):
                     if index > 0:
-                        print("QRコードの前に改行を追加")
                         commands.append(("jp2", "\n", jptext2_args_dict))
                     # QRコードの処理
                     qr_content = re.search(r"<QR:([^>]+)>", text).group(1)
@@ -224,7 +228,6 @@ class TextTagParser:
                 # バーコード：ITFコード
                 if "itf_tag" in tags and re.search(r"<ITF:[^>]+>", text):
                     if index > 0:
-                        print("ITFコードの前に改行を追加")
                         commands.append(("jp2", "\n", jptext2_args_dict))
                     # ITFコードの処理
                     itf_content = re.search(r"<ITF:([^>]+)>", text).group(1)
@@ -234,7 +237,6 @@ class TextTagParser:
                 # バーコード：EANコード
                 if "ean_tag" in tags and re.search(r"<EAN13:[^>]+>", text):
                     if index > 0:
-                        print("EANコードの前に改行を追加")
                         commands.append(("jp2", "\n", jptext2_args_dict))
                     # EANコードの処理
                     ean_content = re.search(r"<EAN13:([^>]+)>", text).group(1)
@@ -244,7 +246,6 @@ class TextTagParser:
                 # バーコード：Code39コード
                 if "c39_tag" in tags and re.search(r"<C39:[^>]+>", text):
                     if index > 0:
-                        print("CODE39コードの前に改行を追加")
                         commands.append(("jp2", "\n", jptext2_args_dict))
                     # CODE39コードの処理
                     code39_content = re.search(r"<C39:([^>]+)>", text).group(1)
@@ -254,7 +255,6 @@ class TextTagParser:
                 # バーコード：Code128コード
                 if "b128_tag" in tags and re.search(r"<B128:[^>]+>", text):
                     if index > 0:
-                        print("B128コードの前に改行を追加")
                         commands.append(("jp2", "\n", jptext2_args_dict))
                     # B128コードの処理
                     b128_content = re.search(r"<B128:([^>]+)>", text).group(1)
