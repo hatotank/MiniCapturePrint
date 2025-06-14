@@ -34,7 +34,7 @@ BARCODE_TAGS = {
 
 STYLE_TAG_GROUPS = {
     "size": ["bold", "four", "vert"],
-    "decorarion": ["underline", "invert"]
+    "decoration": ["underline", "invert"]
 }
 
 # Bayer マトリックスを生成
