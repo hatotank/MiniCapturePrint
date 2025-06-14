@@ -316,7 +316,7 @@ class SettingsWindow(Toplevel):
             return True
         except ValueError:
             if not silent:
-                messagebox.showerror("エラー", "無効なIPアドレス指定です（例: 192.168.10.21）")
+                messagebox.showerror("エラー", "無効なIPアドレス指定です（例: 192.168.10.21）", parent=self)
             return False
 
     def _validate_port(self, silent):
@@ -329,12 +329,12 @@ class SettingsWindow(Toplevel):
             port = int(self.printer_port.get())
             if port < 1 or port > 65535:
                 if not silent:
-                    raise messagebox.showerror("ポート番号は1から65535の範囲で指定してください（例: 9100）")
+                    messagebox.showerror("エラー", "ポート番号は1から65535の範囲で指定してください（例: 9100）", parent=self)
                 return False
             return True
         except ValueError:
             if not silent:
-                messagebox.showerror("エラー", "ポート番号は整数で指定してください（例: 9100）")
+                messagebox.showerror("エラー", "ポート番号は整数で指定してください（例: 9100）", parent=self)
             return False
 
     def _validate_max_image_width(self, silent):
@@ -345,7 +345,7 @@ class SettingsWindow(Toplevel):
         """
         if not self.image_max_width.get().isdigit(): 
             if not silent:
-                messagebox.showerror("エラー", "最大画像幅は整数で指定してください")
+                messagebox.showerror("エラー", "最大画像幅は整数で指定してください", parent=self)
             return False
         return True
 
@@ -357,7 +357,7 @@ class SettingsWindow(Toplevel):
         """
         if not self.image_max_height.get().isdigit(): 
             if not silent:
-                messagebox.showerror("エラー", "最大画像幅は整数で指定してください")
+                messagebox.showerror("エラー", "最大画像幅は整数で指定してください", parent=self)
             return False
         return True
 
@@ -369,7 +369,7 @@ class SettingsWindow(Toplevel):
         """
         if self.startup_mode.get() not in ["form", "tray"]:
             if not silent:
-                messagebox.showerror("エラー", "起動モード指定が不正です（form または tray）")
+                messagebox.showerror("エラー", "起動モード指定が不正です（form または tray）", parent=self)
             return False
         return True
 
@@ -381,7 +381,7 @@ class SettingsWindow(Toplevel):
         """
         if not isinstance(self.hotkey_enabled.get(), bool):
             if not silent:
-                messagebox.showerror("エラー", "ホットキー有効化の指定が不正です（True または False）")
+                messagebox.showerror("エラー", "ホットキー有効化の指定が不正です（True または False）", parent=self)
             return False
         return True
 
@@ -397,7 +397,7 @@ class SettingsWindow(Toplevel):
         lower_hotkey_combination = self.hotkey_combination.get().lower()
         if not re.match(r"(ctrl|alt|shift|\+|[a-z0-9])+", lower_hotkey_combination):
             if not silent:
-                messagebox.showerror("エラー", "ホットキーの形式が不正です（例: ctrl+alt+c）")
+                messagebox.showerror("エラー", "ホットキーの形式が不正です（例: ctrl+alt+c）", parent=self)
             return False
         return True
 
@@ -409,7 +409,7 @@ class SettingsWindow(Toplevel):
         """
         if self.rotate_direction.get() not in ["clockwise", "counterclockwise"]:
             if not silent:
-                messagebox.showerror("エラー", "キャプチャ時の画像回転方向指定が不正です（clockwise または counterclockwise）")
+                messagebox.showerror("エラー", "キャプチャ時の画像回転方向指定が不正です（clockwise または counterclockwise）", parent=self)
             return False
         return True
 
@@ -421,7 +421,7 @@ class SettingsWindow(Toplevel):
         """
         if not isinstance(self.emoji_font_enabled.get(), bool):
             if not silent:
-                messagebox.showerror("エラー", "絵文字フォント変更有効化の指定が不正です（True または False）")
+                messagebox.showerror("エラー", "絵文字フォント変更有効化の指定が不正です（True または False）", parent=self)
             return False
         return True
 
@@ -431,9 +431,9 @@ class SettingsWindow(Toplevel):
 
         :param silent: エラーメッセージを表示しない場合はTrue
         """
-        if self.emoji_font_enabled.get() and not self.printer_emoji_font.get().isspace():
+        if self.emoji_font_enabled.get() and not self.printer_emoji_font.get().strip():
             if not silent:
-                messagebox.showerror("エラー", "絵文字フォントファイル名が指定されていません")
+                messagebox.showerror("エラー", "絵文字フォントファイル名が指定されていません", parent=self)
             return False
         return True
 
@@ -450,7 +450,7 @@ class SettingsWindow(Toplevel):
             return True
         except ValueError:
             if not silent:
-                messagebox.showerror("エラー", "絵文字フォントサイズは正の整数で指定してください")
+                messagebox.showerror("エラー", "絵文字フォントサイズは正の整数で指定してください", parent=self)
             return False
 
     def _validate_emoji_font_adjust_x(self, silent):
@@ -464,7 +464,7 @@ class SettingsWindow(Toplevel):
             return True
         except ValueError:
             if not silent:
-                messagebox.showerror("エラー", "絵文字フォント位置調節(X座標)が不正です")
+                messagebox.showerror("エラー", "絵文字フォント位置調節(X座標)が不正です", parent=self)
             return False
 
     def _validate_emoji_font_adjust_y(self, silent):
@@ -478,7 +478,7 @@ class SettingsWindow(Toplevel):
             return True
         except ValueError:
             if not silent:
-                messagebox.showerror("エラー", "絵文字フォント位置調節(Y座標)が不正です")
+                messagebox.showerror("エラー", "絵文字フォント位置調節(Y座標)が不正です", parent=self)
             return False
 
     def _toggle_hotkey_combination(self):
