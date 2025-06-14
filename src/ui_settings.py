@@ -117,7 +117,7 @@ class SettingsWindow(Toplevel):
         check_hotkey_enable = Checkbutton(options_frame3, text="有効", variable=self.emoji_font_enabled, command=self._toggle_emoji_settings)
         check_hotkey_enable.place(x=10, y=30, height=21)
         # フォントファイル名/フォントサイズ
-        label_emoji_font = Label(options_frame3, text="フォントファイル名(dataフォルダに格納)")
+        label_emoji_font = Label(options_frame3, text="フォントファイル名(fontsフォルダに格納)")
         label_emoji_font.place(x=5, y=55, height=21)
         self.printer_emoji_font = Entry(options_frame3, width=20)
         self.printer_emoji_font.place(x=10, y=80, height=21)
