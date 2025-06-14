@@ -103,18 +103,33 @@ class PrinterHandler:
 
 
 class TextTagParser:
+    """
+    タグ付きテキストを解析し、TM88IVのエスケープコマンドに変換するクラス
+    """
+
     def __init__(self, text_widget):
+        """
+        タグ付きテキストを解析するクラスの初期化
+
+        :param text_widget: タグ付きテキストを含むウィジェット
+        """
         self.text_widget = text_widget
         self.esc_commands = []  # 最終的にPrinterHandlerへ渡すコマンド列
 
     def parse(self):
-        self.esc_commands.clear()
+        """
+        タグ付きテキストを解析し、TM88IVのエスケープコマンドに変換する
 
+        :return: エスケープコマンドのリスト
+        """
+        # 既存のコマンドをクリア
+        self.esc_commands.clear()
+        # 各行のタグブロックを取得
         self.blocks_per_line = self._get_line_tag_blocks()
+        # タグブロックをESC/POSコマンドに変換
         self.esc_commands = self._convert_line_to_esc()
 
         return self.esc_commands
-
 
     def _get_line_tag_blocks(self):
         """
@@ -141,7 +156,6 @@ class TextTagParser:
             compressed = self._compress_tagged_segments(segments)
             results.append(compressed)
         return results
-
 
     def _compress_tagged_segments(self, segments):
         """
@@ -173,8 +187,9 @@ class TextTagParser:
         # 初期位置は左
         commands.append(("row", b"\x1b\x61\x00", {}))
         for line_blocks in self.blocks_per_line:
+            # 各行のテキストとタグを取得
             index = 0  # 行のインデックス
-
+            jptext2_args_dict = {"bflg": True}
             for text, tags in line_blocks:
                 is_text = True  # テキストかどうかのフラグ
                 jptext2_args_dict = {"bflg": True}
@@ -271,8 +286,7 @@ class TextTagParser:
                 #
                 index += 1
 
-            print("---")
-            if index > 0:
-                commands.append(("jp2", "\n", jptext2_args_dict))
+            # 行の終わりに改行を追加
+            commands.append(("jp2", "\n", jptext2_args_dict))
     
         return commands
