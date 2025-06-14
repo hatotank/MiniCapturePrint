@@ -22,7 +22,7 @@ from ui_settings import SettingsWindow # ui_settings.pyからのインポート
 
 # 定数
 PRINTER_IMAGE_MAX_WIDTH = 512
-PRINTER_IMAGE_MAX_HEIGHT = 960
+PRINTER_IMAGE_MAX_HEIGHT = 960 # ほぼ未使用
 
 BARCODE_TAGS = {
     "QR":    {"pattern": r"<QR:(.+?)>",    "tag": "qr_tag",   "bg": "#e8fce8", "fg": "#006600"},
@@ -381,7 +381,6 @@ class App(TkinterDnD.Tk):
         Button(self, text="中央寄せ", command=self.insert_align_center).place(x=310, y=70, width=100, height=26)
         Button(self, text="右寄せ", command=self.insert_align_right).place(x=410, y=70, width=100, height=26)
 
-
         # テキスト入力フィールドとスクロールバーを含むフレームを作成
         text_frame = Frame(self, width=498, height=512, highlightthickness=2, highlightbackground="black")
         text_frame.place(x=11, y=140)
@@ -396,11 +395,14 @@ class App(TkinterDnD.Tk):
         scrollbar.place(x=472, y=0, width=20, height=506)
         # スクロールバーをテキスト入力フィールドに関連付け
         self.text_widget.configure(yscrollcommand=scrollbar.set)
-
-        self.text_widget.bind("<KeyRelease>", lambda e: self.redraw_line_info())  # キーリリースイベントで行番号を更新
-        self.text_widget.bind("ButtonRelease-1", lambda e: self.redraw_line_info()) # マウスボタンが離されたときも行番号を更新
-        self.text_widget.bind("<MouseWheel>", lambda e: self.after(50, self.redraw_line_info()))  # マウスホイールでスクロールしたときも行番号を更新
-        self.text_widget.bind("<Configure>", lambda e: self.redraw_line_info())  # テキストウィジェットのサイズ変更時に行番号を更新
+        # キーリリースイベントで行番号を更新
+        self.text_widget.bind("<KeyRelease>", lambda e: self.redraw_line_info())
+        # マウスボタンが離されたときも行番号を更新
+        self.text_widget.bind("ButtonRelease-1", lambda e: self.redraw_line_info())
+        # マウスホイールでスクロールしたときも行番号を更新
+        self.text_widget.bind("<MouseWheel>", lambda e: self.after(50, self.redraw_line_info()))
+        # テキストウィジェットのサイズ変更時に行番号を更新
+        self.text_widget.bind("<Configure>", lambda e: self.redraw_line_info())
 
         # 右側のデザイン
         # ラベルフレームを作成
@@ -461,7 +463,7 @@ class App(TkinterDnD.Tk):
         # 設定ボタン
         Button(self, text="設定", command=self.open_settings).place(x=10, y=663, width=47, height=46)
         # デバッグボタン
-        Button(self, text="デバッグ", command=lambda: self.debug_print_text_with_tags(self.text_widget)).place(x=60, y=663, width=47, height=46)
+        #Button(self, text="デバッグ", command=lambda: self.debug_print_text_with_tags(self.text_widget)).place(x=60, y=663, width=47, height=46)
 
         # テキスト印刷
         self.checkbutton7 = Checkbutton(self, text="テキスト印刷", variable=self.text_out_enabled, command=self.update_preview)
@@ -486,14 +488,13 @@ class App(TkinterDnD.Tk):
         self.text_widget.tag_configure("bold", font=self.bold_font)
         self.text_widget.tag_configure("underline", underline=1)
         self.text_widget.tag_configure("invert", foreground="white", background="black")
-        self.text_widget.tag_configure("four", font=self.four_font)  # ４倍角用フォント
+        self.text_widget.tag_configure("four", font=self.four_font)  # ４倍角
         self.text_widget.tag_configure("vert", font=self.italic_font)
-
-        self.text_widget.bind("<<Modified>>", self._on_text_modified)  # テキスト変更イベントをバインド
+        # テキスト変更イベントをバインド
+        self.text_widget.bind("<<Modified>>", self._on_text_modified)
 
         # 初期状態の更新
         self.update_hybrid_button_state()
-
 
     def toggle_tag(self, tag_name):
         """
@@ -527,7 +528,6 @@ class App(TkinterDnD.Tk):
         else:
             self.text_widget.tag_add(tag_name, start, end)
 
-
     def debug_print_text_with_tags(self, text_widget):
         """
         テキストウィジェットの内容とタグ状態をデバッグ出力
@@ -555,7 +555,6 @@ class App(TkinterDnD.Tk):
             print(f"{lineno:>3}: '{line_text}'  tags: {', '.join(tags_on_line) if tags_on_line else 'なし'}")
         print("=" * 40)
 
-
     def get_visual_width(self, s):
         """
         文字列の可視幅を計算する
@@ -568,7 +567,6 @@ class App(TkinterDnD.Tk):
             ea = unicodedata.east_asian_width(ch)
             width += 2 if ea in ('W', 'F', 'A') else 1
         return width
-
 
     def redraw_line_info(self):
         """
@@ -592,7 +590,6 @@ class App(TkinterDnD.Tk):
             self.line_info_canvas.create_text(32, y+2, anchor="nw", text=f"{vis_width:>2}", font=("Consolas", 9))
             i = self.text_widget.index(f"{i}+1line") # 次の行へ移動
 
-
     def _on_text_modified(self, event):
         """
         テキストウィジェットの内容が変更されたときに呼び出されるイベントハンドラ
@@ -607,11 +604,9 @@ class App(TkinterDnD.Tk):
         widget = event.widget
         if widget.edit_modified():
             self.text_widget.edit_modified(False)
-            #print("テキストウィジェットの内容が変更されました。-----")
             self.reapply_alignment_tags()
 
         self._is_handling_modified = False
-
 
     def update_hybrid_button_state(self):
         """
@@ -623,13 +618,11 @@ class App(TkinterDnD.Tk):
         else:
             self.hybrid_button.config(state="disabled")
 
-
     def open_settings(self):
         """
         設定ウィンドウを開く
         """
         SettingsWindow(self, self.config_manager)
-
 
     def open_hybrid_settings(self):
         """
@@ -675,8 +668,9 @@ class App(TkinterDnD.Tk):
         Label(frame2, text="フィルタ適用（適用しないはディザ処理のみとなります）").place(x=5, y=5)
         Radiobutton(frame2, text="適用する", value=1, variable=self.hybrid_filter_enabled, command=lambda: [self.update_preview(), self.update_filter_state()]).place(x=10, y=30)
         Radiobutton(frame2, text="適用しない", value=0, variable=self.hybrid_filter_enabled, command=lambda: [self.update_preview(), self.update_filter_state()]).place(x=120, y=30)
-        
+
         Label(frame2, text="フィルタ種類").place(x=5, y=55)
+        # フィルタのラジオボタンを作成(1段目)
         rb_fe = Radiobutton(frame2, text="FIND_EDGES", value="FIND_EDGES", variable=self.hybrid_filter_type, command=self.update_preview)
         rb_fe.place(x=10, y=80)
         self.filter_radio_buttons.append(rb_fe)
@@ -686,14 +680,14 @@ class App(TkinterDnD.Tk):
         rb_dt = Radiobutton(frame2, text="DETAIL", value="DETAIL", variable=self.hybrid_filter_type, command=self.update_preview)
         rb_dt.place(x=230, y=80)
         self.filter_radio_buttons.append(rb_dt)
-
+        # フィルタのラジオボタンを作成(2段目)
         rb_eb = Radiobutton(frame2, text="EMBOSS", value="EMBOSS", variable=self.hybrid_filter_type, command=self.update_preview)
         rb_eb.place(x=10, y=105)
         self.filter_radio_buttons.append(rb_eb)
         rb_sm = Radiobutton(frame2, text="SMOOTH_MORE", value="SMOOTH_MORE", variable=self.hybrid_filter_type, command=self.update_preview)
         rb_sm.place(x=120, y=105)
         self.filter_radio_buttons.append(rb_sm)
-        
+        # フィルタのラジオボタンを作成(3段目)
         rb_en = Radiobutton(frame2, text="EDGE_ENHANCE", value="EDGE_ENHANCE", variable=self.hybrid_filter_type, command=self.update_preview)
         rb_en.place(x=10, y=130)
         self.filter_radio_buttons.append(rb_en)
@@ -707,7 +701,6 @@ class App(TkinterDnD.Tk):
         # 初期状態の更新
         self.update_random_seed()
         self.update_filter_state()
-
 
     def update_random_seed(self):
         """
@@ -730,7 +723,6 @@ class App(TkinterDnD.Tk):
                 sliderlength=10
                 )
   
-
     def update_filter_state(self):
         """
         フィルタのラジオボタンの状態を更新
@@ -738,7 +730,6 @@ class App(TkinterDnD.Tk):
         enabled = self.hybrid_filter_enabled.get() == 1
         for rb in self.filter_radio_buttons:
             rb.config(state="normal" if enabled else "disabled")
-
 
     def hybrid_dithering(self, image, edge_threshold=128, dither_type=0, matrix_size=4, filter_type="FIND_EDGES", filter_enabled=True, random_seed=0):
         """
@@ -797,10 +788,11 @@ class App(TkinterDnD.Tk):
         # 新しい画像を作成
         return Image.fromarray(result, mode="L")
 
-
     def update_preview(self, image=None):
         """
         ラジオボタン、スライダー、チェックボックスの値に基づいて画像を更新します。
+
+        :param image: 更新する画像（Pillow Image オブジェクト）。Noneの場合はオリジナル画像を使用。
         """
         try:
             # オリジナル画像がない場合は何もしない
@@ -887,7 +879,6 @@ class App(TkinterDnD.Tk):
             self.show_error(f"画像の更新中にエラーが発生しました:\n{e}")
             return
 
-
     def start_rectangle_selection(self):
         """
         矩形選択モードを開始します。
@@ -911,7 +902,6 @@ class App(TkinterDnD.Tk):
         self.canvas.bind("<ButtonRelease-1>", self.on_mouse_release)  # 左クリックを離したときに矩形選択を確定
         self.canvas.bind("<ButtonPress-3>", self.cancel_rectangle_selection)  # 右クリックでキャンセル
  
-
     def cancel_rectangle_selection(self, event=None):
         """
         矩形選択モードをキャンセルします。
@@ -923,10 +913,12 @@ class App(TkinterDnD.Tk):
         # ウィンドウを再表示する
         self.deiconify()
 
-
     def on_mouse_press(self, event):
         """
         マウスの左ボタンが押されたときの処理。
+
+        :param event: マウスイベント
+        :type event: Event
         """
         self.start_x = event.x
         self.start_y = event.y
@@ -934,10 +926,12 @@ class App(TkinterDnD.Tk):
             self.start_x, self.start_y, self.start_x, self.start_y, outline="#FF1493", width=3 # ディープピンク
         )
 
-
     def on_mouse_drag(self, event):
         """
         マウスをドラッグしている間の処理。
+
+        :param event: マウスイベント
+        :type event: Event
         """
         if self.rect_id:
             # 現在の幅を計算
@@ -957,10 +951,12 @@ class App(TkinterDnD.Tk):
 
             self.canvas.coords(self.rect_id, self.start_x, self.start_y, x2, y2)
 
-
     def on_mouse_release(self, event):
         """
         マウスの左ボタンが離されたときの処理。
+
+        :param event: マウスイベント
+        :type event: Event
         """
         if self.rect_id:
             # 矩形の最終的な座標を取得
@@ -987,10 +983,12 @@ class App(TkinterDnD.Tk):
             # 自分のウィンドウを再表示する
             self.deiconify()
 
-
     def on_drop(self, event):
         """
         ドロップされたファイルを処理
+
+        :param event: ドロップイベント
+        :type event: Event
         """
         file_path = event.data.strip()  # ドロップされたファイルのパス
         file_path = os.path.normpath(file_path)  # パスを正規化
@@ -1023,7 +1021,6 @@ class App(TkinterDnD.Tk):
 
         except Exception as e:
             self.show_error(f"画像の読み込み中にエラーが発生しました:\n{e}")
-
 
     def enable_image_drag(self):
         """
@@ -1100,10 +1097,16 @@ class App(TkinterDnD.Tk):
         self.picture_canvas.bind("<ButtonPress-1>", start_drag)
         self.picture_canvas.bind("<B1-Motion>", drag_image)
 
-
     def take_screenshot(self, x1, y1, x2, y2):
         """
         指定された矩形領域のスクリーンショットを取得して表示します。
+
+        :param x1: 矩形の左上X座標
+        :param y1: 矩形の左上Y座標
+        :param x2: 矩形の右下X座標
+        :param y2: 矩形の右下Y座標
+        :return: 取得したスクリーンショットのPillow Imageオブジェクト
+        :rtype: Image
         """
         try:
             screenshot = ImageGrab.grab(bbox=(x1, y1, x2, y2))
@@ -1123,13 +1126,20 @@ class App(TkinterDnD.Tk):
         except Exception as e:
             messagebox.showerror("エラー(take_screenshot)", f"スクリーンショットの取得中にエラーが発生しました:\n{e}")
 
-
     def insert_barcode_tag(self, tag, content):
+        """
+        テキストウィジェットにバーコードタグを挿入します。
+
+        :param tag: タグ名（例: "QR", "CODE128"）
+        :param content: タグに含める内容
+        """
         self.text_widget.insert("insert", f"<{tag}:{content}>")
         self.apply_barcode_tags()
 
-
     def apply_barcode_tags(self):
+        """
+        テキストウィジェット内のバーコードタグを適用します。
+        """
         content = self.text_widget.get("1.0", "end-1c")
         for bc in BARCODE_TAGS.values():
             self.text_widget.tag_remove(bc["tag"], "1.0", "end")
@@ -1155,19 +1165,6 @@ class App(TkinterDnD.Tk):
         lines = self.text_widget.get("1.0", "end-1c").splitlines()
         current_align = "align_left"  # デフォルトは左寄せ
         line_number = 1
-
-        # カスタムタグの色を設定
-        #for tag_info in CUSTOM_TAGS.values():
-        #    keyword = tag_info["pattern"]
-        #    tag = tag_info["tag"]
-        #    start = "1.0"
-        #    while True:
-        #        pos = self.text_widget.search(keyword, start, stopindex="end")
-        #        if not pos:
-        #            break
-        #        end = f"{pos}+{len(keyword)}c"
-        #        self.text_widget.tag_add(tag, pos, end)
-        #        start = end
 
         line_count = int(self.text_widget.index("end-1c").split('.')[0])
         for i in range(1, line_count + 1):
@@ -1204,24 +1201,13 @@ class App(TkinterDnD.Tk):
                 align_type = match.group(1)
                 if align_type == "LEFT":
                     current_align = "align_left"
-                    #keyword = "<ALIGN:LEFT>"
-                    #end = f"{line_number}+{len(keyword)-2}c"
-                    #line_end = f"{line_number}.end"
-                    #print(f"Line {line_end}: line_end")
-                    #elf.text_widget.tag_add("align_center_color", f"{line_number}.0",end)
-                    #self.text_widget.tag_add("align_center_color", f"{line_number}.0", f"{6}.c")
-                    print(f"Line {line_number}: align left")
                 elif align_type == "CENTER":
                     current_align = "align_center"
-                    #self.text_widget.tag_add("align_center_color", f"{line_number}.0", f"{6}.c")
-                    print(f"Line {line_number}: align center")
                 elif align_type == "RIGHT":
                     current_align = "align_right"
-                    print(f"Line {line_number}: align right")
 
             self.text_widget.tag_add(current_align, f"{line_number}.0", f"{line_number}.end")
             line_number += 1
-
 
     def input_qr_barcode(self):
         """
@@ -1237,7 +1223,6 @@ class App(TkinterDnD.Tk):
             else:
                 self.insert_barcode_tag("QR", data)
                 return
-
 
     def input_itf_barcode(self):
         """
@@ -1257,7 +1242,6 @@ class App(TkinterDnD.Tk):
             else:
                 messagebox.showerror("エラー", "数字のみ有効です。")
 
-
     def input_ean13_barcode(self):
         """
         EAN13コードを入力(12桁または13桁)
@@ -1273,7 +1257,6 @@ class App(TkinterDnD.Tk):
             else:
                 messagebox.showerror("エラー", "12または13桁の数字のみ有効です。")
 
-
     def input_code39_barcode(self):
         """
         Code39コードを入力
@@ -1288,7 +1271,6 @@ class App(TkinterDnD.Tk):
                 return
             else:
                 messagebox.showerror("エラー", "使用できない文字が含まれています。")
-
 
     def input_code128_barcode(self):
         """
@@ -1309,13 +1291,11 @@ class App(TkinterDnD.Tk):
             except UnicodeEncodeError:
                 messagebox.showerror("エラー", "ASCII文字のみ使用できます。")
 
-
     def insert_horizontal_rule(self):
         """
         水平罫線を入力
         """
         self.text_widget.insert("insert", "<HR>")  # <HR>タグを挿入
-
 
     def insert_align_left(self):
         """
@@ -1324,7 +1304,6 @@ class App(TkinterDnD.Tk):
         self.text_widget.insert("insert", "<ALIGN:LEFT>\n")  # <ALIGN:LEFT>タグを挿入
         self.reapply_alignment_tags()
     
-
     def insert_align_center(self):
         """
         中央寄せを入力
@@ -1332,14 +1311,12 @@ class App(TkinterDnD.Tk):
         self.text_widget.insert("insert", "<ALIGN:CENTER>\n")  # <ALIGN:CENTER>タグを挿入
         self.reapply_alignment_tags()
 
-    
     def insert_align_right(self):
         """
         右寄せを入力
         """
         self.text_widget.insert("insert", "<ALIGN:RIGHT>\n")  # <ALIGN:RIGHT>タグを挿入
         self.reapply_alignment_tags()
-
 
     def print(self):
         """
@@ -1352,7 +1329,7 @@ class App(TkinterDnD.Tk):
             return
 
         try:
-            printer = PrinterHandler(ip_address=printer_ip, config=self.tm88iv_config)
+            printer = PrinterHandler(ip_address=printer_ip, media_width=self.config.get("image_max_width", 512), config=self.tm88iv_config)
             printer.print_text_with_tags(text_widget=self.text_widget,
                                          image_path=self.processed_image,
                                          enable_text_print=self.text_out_enabled.get(),
@@ -1360,7 +1337,6 @@ class App(TkinterDnD.Tk):
                                          should_cut_paper=self.paper_cut_enabled.get())
         except Exception as e:
             self.show_error(f"印字中にエラーが発生しました:\n{e}")
-
 
     def start_thread_tray(self):
         """
@@ -1373,7 +1349,6 @@ class App(TkinterDnD.Tk):
         icon_image = Image.open(self.src_dir / "minicaptureprint.ico")
         self.icon = Icon("MiniCapturePrint", icon_image, "MiniCapturePrint", menu)
         self.icon.run()
-
 
     def stop_thread_tray(self):
         """
@@ -1396,13 +1371,11 @@ class App(TkinterDnD.Tk):
         # 終了
         sys.exit(0)
 
-
     def on_minimize(self, event=None):
         """
         最小化ボタンが押されたときにタスクバーから非表示
         """
         self.withdraw()
-    
 
     def on_close(self):
         """
@@ -1410,14 +1383,12 @@ class App(TkinterDnD.Tk):
         """
         self.stop_thread_tray()
 
-
     def run(self):
         """
         アプリケーションを実行
         """
         threading.Thread(target=self.start_thread_tray, daemon=True).start()
         self.mainloop()
-
 
 # アプリケーションのエントリポイント
 if __name__ == "__main__":
