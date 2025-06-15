@@ -21,6 +21,7 @@ class PrinterHandler:
 
         # ログ設定
         self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)  # デバッグ時 INFO --> DEBUG
 
     def print_text_with_tags(self, text_widget, image_path=None, enable_text_print=False, enable_image_print=False, should_cut_paper=False):
         """
@@ -33,12 +34,14 @@ class PrinterHandler:
         :param should_cut_paper: 印刷後に用紙をカットするかどうか
         """
         # 印刷有効フラグ
-        debug_print_enabled = True  # デバッグ用の印刷フラグ
+        debug_print_enabled = True # デバッグ用の印刷フラグ
         # 印刷フラグ
         isprinted = False
         # タグ解析
         parser = TextTagParser(text_widget)
         commands = parser.parse()
+        self.logger.debug(f"=== タグ解析結果 ===")
+        self.logger.debug(f"コマンド: {commands}")
 
         # テキストが含まれているかどうか
         text_included = False  
@@ -46,7 +49,6 @@ class PrinterHandler:
             text_included = True
 
         if debug_print_enabled:
-            self.logger.setLevel(logging.INFO)  # デバッグ時 INFO --> DEBUG
             self.logger.debug(f"=== 印刷開始 ===")
             self.logger.debug(f"テキスト印刷: {enable_text_print}, 画像印刷: {enable_image_print}, 用紙カット: {should_cut_paper}")
             self.logger.debug(f"テキスト含むか: {text_included}")
@@ -114,6 +116,8 @@ class TextTagParser:
         """
         self.text_widget = text_widget
         self.esc_commands = []  # 最終的にPrinterHandlerへ渡すコマンド列
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
 
     def parse(self):
         """
@@ -132,7 +136,7 @@ class TextTagParser:
 
     def _get_line_tag_blocks(self):
         """
-        各行のタグブロックを取得
+        各行のタグブロックを取得（改行もセグメントとして含める）
         """
         results = []
         total_lines = int(self.text_widget.index("end-1c").split(".")[0])
@@ -151,6 +155,10 @@ class TextTagParser:
                 tags = self.text_widget.tag_names(index)
                 segments.append((char, tags))
                 index = next_index
+            # 行末に改行があれば追加
+            if lineno < total_lines or self.text_widget.get(line_end) == '\n':
+                tags = self.text_widget.tag_names(line_end)
+                segments.append(('\n', tags))
             # タグセットごとにブロック圧縮
             compressed = self._compress_tagged_segments(segments)
             results.append(compressed)
@@ -158,7 +166,7 @@ class TextTagParser:
 
     def _compress_tagged_segments(self, segments):
         """
-        タグ付きセグメントを圧縮する\n
+        タグ付きセグメントを圧縮する（改行も含めて圧縮）
         連続する同じタグの文字列を1つにまとめる
 
         :param segments: (文字, タグ)のリスト
@@ -172,14 +180,21 @@ class TextTagParser:
         current_tags = segments[0][1]
 
         for char, tags in segments[1:]:
+            # 改行は常に新しいセグメントとして扱う
+            if char == '\n':
+                compressed.append((current_text, current_tags))
+                compressed.append(('\n', tags))
+                current_text = ''
+                current_tags = None
+                continue
             if tags == current_tags:
                 current_text += char
             else:
                 compressed.append((current_text, current_tags))
                 current_text = char
                 current_tags = tags
-
-        compressed.append((current_text, current_tags))
+        if current_text:
+            compressed.append((current_text, current_tags))
         return compressed
 
     def _convert_line_to_esc(self):
@@ -189,12 +204,20 @@ class TextTagParser:
         """
         # エスケープコマンドのリスト
         commands = []
+        #
+        line_count = len(self.blocks_per_line)
+        self.logger.debug(f"====")
+        self.logger.debug(f"行数: {line_count}")
 
         # 初期位置は左
         commands.append(("row", b"\x1b\x61\x00", {}))
         for line_blocks in self.blocks_per_line:
+            self.logger.debug(f"行ブロック: {line_blocks}")
             # 各行のテキストとタグを取得
             index = 0  # 行のインデックス
+            include_text = False  # テキストが存在するかどうかのフラグ
+            include_align = False  # 左寄せ、中央寄せ、右寄せのフラグ
+            include_barcode = False  # バーコードが存在するかどうかのフラグ
             jptext2_args_dict = {"bflg": True}
             for text, tags in line_blocks:
                 is_text = True  # テキストかどうかのフラグ
@@ -204,12 +227,15 @@ class TextTagParser:
                 if "align_left" in tags and re.search(r"<ALIGN:LEFT>", text):
                     commands.append(("row", b"\x1b\x61\x00", {}))
                     is_text = False
+                    include_align = True
                 if "align_center" in tags and re.search(r"<ALIGN:CENTER>", text):
                     commands.append(("row", b"\x1b\x61\x01", {}))
                     is_text = False
+                    include_align = True
                 if "align_right" in tags and re.search(r"<ALIGN:RIGHT>", text):
                     commands.append(("row", b"\x1b\x61\x02", {}))
                     is_text = False
+                    include_align = True
                 # 水平線
                 if re.search(r"<HR>", text):
                     commands.append(("row", b"\x1b\x61\x00", {}))
@@ -224,6 +250,7 @@ class TextTagParser:
                     qr_content = re.search(r"<QR:([^>]+)>", text).group(1)
                     commands.append(("qr", qr_content, {}))
                     is_text = False  # QRコードはテキストではない
+                    include_barcode = True
 
                 # バーコード：ITFコード
                 if "itf_tag" in tags and re.search(r"<ITF:[^>]+>", text):
@@ -233,6 +260,7 @@ class TextTagParser:
                     itf_content = re.search(r"<ITF:([^>]+)>", text).group(1)
                     commands.append(("itf", itf_content, {}))
                     is_text = False  # ITFコードはテキストではない
+                    include_barcode = True
 
                 # バーコード：EANコード
                 if "ean_tag" in tags and re.search(r"<EAN13:[^>]+>", text):
@@ -242,6 +270,7 @@ class TextTagParser:
                     ean_content = re.search(r"<EAN13:([^>]+)>", text).group(1)
                     commands.append(("ean", ean_content, {}))
                     is_text = False  # EANコードはテキストではない
+                    include_barcode = True
 
                 # バーコード：Code39コード
                 if "c39_tag" in tags and re.search(r"<C39:[^>]+>", text):
@@ -251,6 +280,7 @@ class TextTagParser:
                     code39_content = re.search(r"<C39:([^>]+)>", text).group(1)
                     commands.append(("c39", code39_content, {}))
                     is_text = False  # CODE39コードはテキストではない
+                    include_barcode = True
 
                 # バーコード：Code128コード
                 if "b128_tag" in tags and re.search(r"<B128:[^>]+>", text):
@@ -260,6 +290,7 @@ class TextTagParser:
                     b128_content = re.search(r"<B128:([^>]+)>", text).group(1)
                     commands.append(("c128", b128_content, {}))
                     is_text = False  # B128コードはテキストではない
+                    include_barcode = True
 
                 # テキストのタグを解析してjptext2の引数を設定
                 # 横倍角
@@ -279,14 +310,23 @@ class TextTagParser:
                     jptext2_args_dict["dw"] = True
                     jptext2_args_dict["dh"] = True
 
-                #文字が存在しない場合はコマンド追加しない
+                if text == "\n":
+                    # 改行の場合はコマンド追加しない
+                    is_text = False
+
+                # 文字が存在しない場合はコマンド追加しない
                 # テキストはTM88IVのjp2コマンドで送信
                 if is_text:
                     commands.append(("jp2", text, jptext2_args_dict))
-                #
+                    include_text = True  # テキストが存在するフラグを設定
+
+                # 行のインデックスを更新
                 index += 1
 
             # 行の終わりに改行を追加
-            commands.append(("jp2", "\n", jptext2_args_dict))
+            if include_text or \
+                (index == 1 and not include_barcode and not include_align and line_count > 1) or \
+                (line_count == 1 and not include_barcode and include_align):
+                commands.append(("jp2", "\n", jptext2_args_dict))
     
         return commands
