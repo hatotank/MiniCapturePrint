@@ -117,7 +117,7 @@ class TextTagParser:
         self.text_widget = text_widget
         self.esc_commands = []  # 最終的にPrinterHandlerへ渡すコマンド列
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.INFO)  # デバッグ時 INFO --> DEBUG
 
     def parse(self):
         """
@@ -240,6 +240,7 @@ class TextTagParser:
                 if re.search(r"<HR>", text):
                     commands.append(("row", b"\x1b\x61\x00", {}))
                     commands.append(("jp2", "─────────────────────", jptext2_args_dict))
+                    commands.append(("jp2", "\n", jptext2_args_dict))
                     is_text = False
 
                 # バーコード：QRコード
