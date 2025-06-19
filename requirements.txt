@@ -1,2 +1,7 @@
+pillow
+numpy
+pystray
+tkinterdnd2
+keyboard
 tkinter
 python-escpos
