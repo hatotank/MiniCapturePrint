@@ -47,8 +47,8 @@ def main_task():
     BASE_DIR = Path(__file__).resolve().parent.parent
     FONTS_DIR = BASE_DIR / "fonts"
     DATA_DIR = BASE_DIR / "data"
-    TEMP_ZIP1 = FONTS_DIR / "_tmp_NotoSansJP.zip"
-    TEMP_ZIP2 = FONTS_DIR / "_tmp_OpenMoji.zip"
+    TEMP_ZIP1 = FONTS_DIR / "NotoSansJP.zip"
+    TEMP_ZIP2 = FONTS_DIR / "OpenMoji.zip"
 
     # フォルダが存在しない場合は作成
     FONTS_DIR.mkdir(exist_ok=True)
@@ -74,7 +74,9 @@ def main_task():
                     print("[UNZIP] NotoSansJP-Medium.otf を抽出")
                     zp.extract(name, FONTS_DIR)
                     (FONTS_DIR / name).rename(FONTS_DIR / "NotoSansJP-Medium.otf")
+        print(f"[DEL] {TEMP_ZIP1.name} を削除")
         TEMP_ZIP1.unlink(missing_ok=True)
+        print
     else:
         print("[SKIP] NotoSansJP-Medium.otf は既に存在します")
 
@@ -91,6 +93,7 @@ def main_task():
                     subdir = FONTS_DIR / Path(name).parent
                     if subdir.exists() and subdir.is_dir():
                         shutil.rmtree(subdir)
+        print(f"[DEL] {TEMP_ZIP2.name} を削除")
         TEMP_ZIP2.unlink(missing_ok=True)
     else:
         print("[SKIP] OpenMoji-black-glyf.ttf は既に存在します")
