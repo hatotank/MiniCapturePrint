@@ -9,4 +9,5 @@ src/__pycache__/
 /config
 
 # 開発中
-\!dev_*
+\!dev*
+/\!dev
