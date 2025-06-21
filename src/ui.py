@@ -16,6 +16,14 @@ import inspect
 import unicodedata
 import ctypes
 
+# サブモジュールのディレクトリ名（例: "tm88iv"）
+submodule_dir = os.path.join(os.path.dirname(__file__), "tm88iv/tm88iv")
+
+if not os.path.isdir(os.path.abspath(submodule_dir)):
+    messagebox.showerror("エラー", f"サブモジュール 'tm88iv' が見つかりません。\n"
+                         f"git submodule update --init --recursive を実行してください。\n")
+    sys.exit(1)
+
 from config import ConfigHandler # config.pyからのインポート
 from printer import PrinterHandler # printer.pyからのインポート
 from ui_settings import SettingsWindow # ui_settings.pyからのインポート
