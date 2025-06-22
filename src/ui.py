@@ -67,12 +67,14 @@ def bayer_matrix(n):
     """
     if n == 1:
         return np.array([[0]])
-    else:
+    elif n in (2, 4, 8):
         smaller_matrix = bayer_matrix(n // 2)
         return np.block([
             [4 * smaller_matrix, 4 * smaller_matrix + 2],
             [4 * smaller_matrix + 3, 4 * smaller_matrix + 1]
         ]) / (n * n)
+    else:
+        raise ValueError("bayer_matrix: 未対応のサイズです（2, 4, 8 のみ対応）")
 
 
 # random マトリックスを生成
