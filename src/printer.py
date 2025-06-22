@@ -284,13 +284,13 @@ class TextTagParser:
                     include_barcode = True
 
                 # バーコード：Code128コード
-                if "b128_tag" in tags and re.search(r"<B128:[^>]+>", text):
+                if "c128_tag" in tags and re.search(r"<C128:[^>]+>", text):
                     if index > 0:
                         commands.append(("jp2", "\n", jptext2_args_dict))
-                    # B128コードの処理
-                    b128_content = re.search(r"<B128:([^>]+)>", text).group(1)
-                    commands.append(("c128", b128_content, {}))
-                    is_text = False  # B128コードはテキストではない
+                    # C128コードの処理
+                    c128_content = re.search(r"<C128:([^>]+)>", text).group(1)
+                    commands.append(("c128", c128_content, {}))
+                    is_text = False  # C128コードはテキストではない
                     include_barcode = True
 
                 # テキストのタグを解析してjptext2の引数を設定

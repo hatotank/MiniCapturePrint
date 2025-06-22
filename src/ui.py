@@ -37,7 +37,7 @@ BARCODE_TAGS = {
     "ITF":   {"pattern": r"<ITF:(.+?)>",   "tag": "itf_tag",  "bg": "#f4e8ff", "fg": "#6a1b9a"},
     "EAN13": {"pattern": r"<EAN13:(.+?)>", "tag": "ean_tag",  "bg": "#eeeeee", "fg": "#222222"},
     "C39":   {"pattern": r"<C39:(.+?)>",   "tag": "c39_tag",  "bg": "#e7f0fa", "fg": "#004488"},
-    "B128":  {"pattern": r"<B128:(.+?)>",  "tag": "b128_tag", "bg": "#fff3e0", "fg": "#a63d00"},
+    "C128":  {"pattern": r"<C128:(.+?)>",  "tag": "c128_tag", "bg": "#fff3e0", "fg": "#a63d00"},
 }
 
 # 色付け用タグ（配置用タグとは分離）
@@ -1296,7 +1296,7 @@ class App(TkinterDnD.Tk):
                 if len(data) > 90:
                     messagebox.showerror("エラー", "最大90文字までです。")
                 else:
-                    self.insert_barcode_tag("B128", data)
+                    self.insert_barcode_tag("C128", data)
                     return
             except UnicodeEncodeError:
                 messagebox.showerror("エラー", "ASCII文字のみ使用できます。")
