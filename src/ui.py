@@ -249,6 +249,7 @@ class App(TkinterDnD.Tk):
         self.src_dir = Path(__file__).parent.resolve()  # srcディレクトリのパスを取得
         self.config_manager = ConfigHandler(self.src_dir / "../config/config.json")
         self.config = self.config_manager.load_config()
+        self.printer_image_max_width = int(self.config.get("image_max_width", PRINTER_IMAGE_MAX_WIDTH))  # 設定から最大画像幅を取得
 
         # メインスレッドで処理を渡すためのキュー
         self.queue = queue.Queue()
