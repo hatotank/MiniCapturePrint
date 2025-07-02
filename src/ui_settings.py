@@ -350,6 +350,10 @@ class SettingsWindow(Toplevel):
             if not silent:
                 messagebox.showerror("エラー", "最大画像幅は整数で指定してください", parent=self)
             return False
+        if int(self.image_max_width.get()) > 576:
+            if not silent:
+                messagebox.showerror("エラー", "最大画像幅は576までです", parent=self)
+            return False
         return True
 
     def _validate_max_image_height(self, silent):
