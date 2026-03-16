@@ -109,7 +109,7 @@ def main_task():
 
     # Jigmo (zip 展開)
     # https://kamichikoichi.github.io/jigmo/
-    if not (FONTS_DIR / "Jigmo.ttf").exists():
+    if not ((FONTS_DIR / "Jigmo.ttf").exists() and (FONTS_DIR / "Jigmo2.ttf").exists() and (FONTS_DIR / "Jigmo3.ttf").exists()):
         download("https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip", TEMP_ZIP3)
         with zipfile.ZipFile(TEMP_ZIP3, 'r') as zp:
             for name in zp.namelist():
@@ -127,7 +127,7 @@ def main_task():
                     (FONTS_DIR / name).rename(FONTS_DIR / "Jigmo3.ttf")
         TEMP_ZIP3.unlink(missing_ok=True)
     else:
-        print("[SKIP] Jigmo.ttf は既に存在します")
+        print("[SKIP] Jigmo.ttf Jigmo2.ttf Jigmo3.ttf は既に存在します")
 
     print("[完了] すべてのファイルが準備されました。")
 
