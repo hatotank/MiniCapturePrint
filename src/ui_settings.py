@@ -14,7 +14,7 @@ class SettingsWindow(Toplevel):
         :param config: 設定データ
         """
         super().__init__(master)
-        self.title("設定（設定内容の反映はアプリ再起動後です）")
+        self.title("設定（※設定内容の反映はアプリ再起動後です）")
         self.geometry("620x600")
         self.resizable(False, False)
         # 常に最前面に表示
