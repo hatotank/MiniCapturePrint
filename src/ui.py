@@ -265,13 +265,13 @@ class App(TkinterDnD.Tk):
 
         # TM88IVクラス用設定
         self.tm88iv_config = {
-            "jis0201_file": self.src_dir / "../data/JIS0201.TXT",  # JIS0201 データファイル
-            "jis0208_file": self.src_dir / "../data/JIS0208.TXT",  # JIS0208 データファイル
-            "jis0212_file": self.src_dir / "../data/JIS0212.TXT",  # JIS0212 データファイル
-            "jis0213_file": self.src_dir / "../data/JIS0213-2004.TXT",  # JIS0213-2004 データファイル
             "emoji_font_file": self.src_dir / "../fonts/OpenMoji-black-glyf.ttf",  # 絵文字フォント
-            "kanji_font_file": self.src_dir / "../fonts/NotoSansJP-Medium.otf",  # 日本語フォント
-            "fallback_font_file": self.src_dir / "../fonts/unifont_jp-16.0.03.otf",  # フォールバックフォント
+            "kanji_font_file": self.src_dir / "../fonts/NotoSansCJKjp-Medium.otf", # 日本語フォント
+            "fallback_font_file_p01": self.src_dir / "../fonts/unifont_jp-17.0.03.otf",   # フォールバックフォント Unifont (BMP)
+            "fallback_font_file_p2": self.src_dir / "../fonts/unifont_upper-17.0.03.otf", # フォールバックフォント Unifont (SIP)
+            "fallback_jigmo_file_p01": self.src_dir / "../fonts/jigmo.ttf",  # フォールバックフォント Jigmo Plane 0 (BMP) & Plane 1 (SMP)
+            "fallback_jigmo_file_p2": self.src_dir / "../fonts/jigmo2.ttf",  # フォールバックフォント Jigmo Plane 2 (SIP)
+            "fallback_jigmo_file_p3": self.src_dir / "../fonts/jigmo3.ttf",  # フォールバックフォント JigmoPlane 3 (TIP)
             # TM88IVクラスの引数ではないけど、ファイルチェックの関係上含める
             "icon_file": self.src_dir / "minicaptureprint.ico"  # アイコンファイル
         }
