@@ -36,26 +36,22 @@ Because Kanji commands are used, this application is basically for Japanese mode
 
 ## Usage
 
-When you start `luncher.pyw`, required fonts and JIS data will be downloaded automatically.
-*From the second launch, only missing files will be downloaded.*
+When you start `luncher.pyw`, required fonts will be downloaded automatically.
+*From the second launch, the app checks existing files and downloads only the missing ones.*
 
 ![Download Tool](/images/img003.png)
 
 **Download Sources**
-- NotoSansJP-Medium.otf  
+- NotoSansCJKjp-Medium.otf  
   https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/16_NotoSansJP.zip
 - OpenMoji-black-glyf.ttf  
-  https://github.com/hfg-gmuend/openmoji/releases/download/15.1.0/openmoji-font.zip
-- unifont_jp-16.0.03.otf  
-  https://unifoundry.com/pub/unifont/unifont-16.0.03/font-builds/unifont_jp-16.0.03.otf
-- JIS0201.TXT  
-  http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0201.TXT
-- JIS0208.TXT  
-  http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT
-- JIS0212.TXT  
-  http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT
-- JIS0213-2004.TXT  
-  https://raw.githubusercontent.com/hatotank/WPT/refs/heads/main/JIS0213-2004.TXT
+  https://github.com/hfg-gmuend/openmoji/releases/download/16.0.0/openmoji-font.zip
+- unifont_jp-17.0.03.otf  
+  https://unifoundry.com/pub/unifont/unifont-17.0.03/font-builds/unifont_jp-17.0.03.otf
+- unifont_upper-17.0.03.otf  
+  https://unifoundry.com/pub/unifont/unifont-17.0.03/font-builds/unifont_upper-17.0.03.otf
+- Jigmo.ttf & Jigmo2.ttf & Jigmo3.ttf  
+  https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip
 
 **Main Form (Left Side)**
 Text decorations are visually reflected. Barcodes are entered via input prompts.

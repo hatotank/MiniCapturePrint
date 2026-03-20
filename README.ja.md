@@ -36,26 +36,22 @@ git submodule update --init --recursive
 
 ## 使い方
 
-`luncher.pyw`を起動すると、フォントとJISデータがダウンロードされます。
+`luncher.pyw`を起動すると、フォントがダウンロードされます。
 ※2回目以降の起動時は、ファイルの存在をチェックし、存在しないファイルのみ取得します。
 
 ![ダウンロードツール](/images/img003.png)
 
 **ダウンロード先**
-- NotoSansJP-Medium.otf  
+- NotoSansCJKjp-Medium.otf
   https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/16_NotoSansJP.zip
 - OpenMoji-black-glyf.ttf  
-  https://github.com/hfg-gmuend/openmoji/releases/download/15.1.0/openmoji-font.zip
-- unifont_jp-16.0.03.otf  
-  https://unifoundry.com/pub/unifont/unifont-16.0.03/font-builds/unifont_jp-16.0.03.otf
-- JIS0201.TXT  
-  http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0201.TXT
-- JIS0208.TXT  
-  http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT
-- JIS0212.TXT  
-  http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT
-- JIS0213-2004.TXT  
-  https://raw.githubusercontent.com/hatotank/WPT/refs/heads/main/JIS0213-2004.TXT
+  https://github.com/hfg-gmuend/openmoji/releases/download/16.0.0/openmoji-font.zip
+- unifont_jp-17.0.03.otf  
+  https://unifoundry.com/pub/unifont/unifont-17.0.03/font-builds/unifont_jp-17.0.03.otf
+- unifont_upper-17.0.03.otf
+  https://unifoundry.com/pub/unifont/unifont-17.0.03/font-builds/unifont_upper-17.0.03.otf
+- Jigmo.ttf & Jigmo2.ttf & Jigmo3.ttf
+  https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip
 
 **起動後のメインフォーム（左側）**
 文字装飾は視覚的に反映されます。バーコードは入力プロンプトで入力します。
