@@ -13,7 +13,7 @@ from tkinter.scrolledtext import ScrolledText
 class LogWindow:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("フォントとJISデータをダウンロード中...")
+        self.root.title("フォントをダウンロード中...")
         self.root.geometry("600x400")
 
         self.text = ScrolledText(self.root, state='disabled', font=("Consolas", 10))
@@ -46,13 +46,12 @@ class LogWindow:
 def main_task():
     BASE_DIR = Path(__file__).resolve().parent.parent
     FONTS_DIR = BASE_DIR / "fonts"
-    DATA_DIR = BASE_DIR / "data"
-    TEMP_ZIP1 = FONTS_DIR / "NotoSansJP.zip"
+    TEMP_ZIP1 = FONTS_DIR / "NotoSansCJKjp.zip"
     TEMP_ZIP2 = FONTS_DIR / "OpenMoji.zip"
+    TEMP_ZIP3 = FONTS_DIR / "Jigmo.zip"
 
     # フォルダが存在しない場合は作成
     FONTS_DIR.mkdir(exist_ok=True)
-    DATA_DIR.mkdir(exist_ok=True)
 
     def download(url: str, dest: Path):
         if dest.exists():
@@ -61,29 +60,28 @@ def main_task():
         print(f"[GET] {dest.name} をダウンロード中...")
         urllib.request.urlretrieve(url, dest)
 
-    print("=== フォントとJISデータを準備中 ===")
+    print("=== フォントを準備中 ===")
 
     # --- フォント ---
-    # NotoSansJP (zip 展開)
+    # NotoSansCJKjp (zip 展開)
     # https://github.com/notofonts/noto-cjk
-    if not (FONTS_DIR / "NotoSansJP-Medium.otf").exists():
-        download("https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/16_NotoSansJP.zip", TEMP_ZIP1)
+    if not (FONTS_DIR / "NotoSansCJKjp-Medium.otf").exists():
+        download("https://github.com/googlefonts/noto-cjk/releases/download/Sans2.004/06_NotoSansCJKjp.zip", TEMP_ZIP1)
         with zipfile.ZipFile(TEMP_ZIP1, 'r') as zp:
             for name in zp.namelist():
-                if name.endswith("NotoSansJP-Medium.otf"):
-                    print("[UNZIP] NotoSansJP-Medium.otf を抽出")
+                if name.endswith("NotoSansCJKjp-Medium.otf"):
+                    print("[UNZIP] NotoSansCJKjp-Medium.otf を抽出")
                     zp.extract(name, FONTS_DIR)
-                    (FONTS_DIR / name).rename(FONTS_DIR / "NotoSansJP-Medium.otf")
+                    (FONTS_DIR / name).rename(FONTS_DIR / "NotoSansCJKjp-Medium.otf")
         print(f"[DEL] {TEMP_ZIP1.name} を削除")
         TEMP_ZIP1.unlink(missing_ok=True)
-        print
     else:
-        print("[SKIP] NotoSansJP-Medium.otf は既に存在します")
+        print("[SKIP] NotoSansCJKjp-Medium.otf は既に存在します")
 
     # OpenMoji (zip 展開)
     # https://github.com/hfg-gmuend/openmoji
     if not (FONTS_DIR / "OpenMoji-black-glyf.ttf").exists():
-        download("https://github.com/hfg-gmuend/openmoji/releases/download/15.1.0/openmoji-font.zip", TEMP_ZIP2)
+        download("https://github.com/hfg-gmuend/openmoji/releases/download/16.0.0/openmoji-font.zip", TEMP_ZIP2)
         with zipfile.ZipFile(TEMP_ZIP2, 'r') as zp:
             for name in zp.namelist():
                 if name.endswith("OpenMoji-black-glyf.ttf"):
@@ -98,24 +96,38 @@ def main_task():
     else:
         print("[SKIP] OpenMoji-black-glyf.ttf は既に存在します")
 
-    # Unifont (JP)
+    # Unifont (JP & Upper) (直接ダウンロード)
     # https://unifoundry.com/unifont/
     download(
-        "https://unifoundry.com/pub/unifont/unifont-16.0.03/font-builds/unifont_jp-16.0.03.otf",
-        FONTS_DIR / "unifont_jp-16.0.03.otf"
+        "https://unifoundry.com/pub/unifont/unifont-17.0.03/font-builds/unifont_jp-17.0.03.otf",
+        FONTS_DIR / "unifont_jp-17.0.03.otf"
+    )
+    download(
+        "https://unifoundry.com/pub/unifont/unifont-17.0.03/font-builds/unifont_upper-17.0.03.otf",
+        FONTS_DIR / "unifont_upper-17.0.03.otf"
     )
 
-    # --- JISデータ ---
-    # https://www.unicode.org/ + https://github.com/hatotank/WPT
-    jis_files = {
-        "JIS0201.TXT": "http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0201.TXT",
-        "JIS0208.TXT": "http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0208.TXT",
-        "JIS0212.TXT": "http://unicode.org/Public/MAPPINGS/OBSOLETE/EASTASIA/JIS/JIS0212.TXT",
-        "JIS0213-2004.TXT": "https://raw.githubusercontent.com/hatotank/WPT/refs/heads/main/JIS0213-2004.TXT",
-    }
-
-    for filename, url in jis_files.items():
-        download(url, DATA_DIR / filename)
+    # Jigmo (zip 展開)
+    # https://kamichikoichi.github.io/jigmo/
+    if not ((FONTS_DIR / "Jigmo.ttf").exists() and (FONTS_DIR / "Jigmo2.ttf").exists() and (FONTS_DIR / "Jigmo3.ttf").exists()):
+        download("https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip", TEMP_ZIP3)
+        with zipfile.ZipFile(TEMP_ZIP3, 'r') as zp:
+            for name in zp.namelist():
+                if name.endswith("Jigmo.ttf"):
+                    print("[UNZIP] Jigmo.ttf を抽出")
+                    zp.extract(name, FONTS_DIR)
+                    (FONTS_DIR / name).rename(FONTS_DIR / "Jigmo.ttf")
+                if name.endswith("Jigmo2.ttf"):
+                    print("[UNZIP] Jigmo2.ttf を抽出")
+                    zp.extract(name, FONTS_DIR)
+                    (FONTS_DIR / name).rename(FONTS_DIR / "Jigmo2.ttf")
+                if name.endswith("Jigmo3.ttf"):
+                    print("[UNZIP] Jigmo3.ttf を抽出")
+                    zp.extract(name, FONTS_DIR)
+                    (FONTS_DIR / name).rename(FONTS_DIR / "Jigmo3.ttf")
+        TEMP_ZIP3.unlink(missing_ok=True)
+    else:
+        print("[SKIP] Jigmo.ttf Jigmo2.ttf Jigmo3.ttf は既に存在します")
 
     print("[完了] すべてのファイルが準備されました。")
 
