@@ -1,5 +1,14 @@
 # MiniCapturePrint
 
+<table>
+	<thead>
+		<tr>
+			<th style="text-align:center"><a href="README.md">English</a></th>
+			<th style="text-align:center">日本語</th>
+		</tr>
+	</thead>
+</table>
+
 ## 概要
 ご家庭にあるサーマルプリンタ（レシートプリンタ）で、メモや画像を手軽に印刷できるアプリです。（イメージは[キングジム](https://www.kingjim.co.jp/)さんの[ココドリ](https://www.kingjim.co.jp/sp/cc10/)風）
 前プロジェクト（[WPT](https://github.com/hatotank/WPT)）の応用のため、絵文字も印刷可能です。

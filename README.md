@@ -1,5 +1,14 @@
 # MiniCapturePrint
 
+<table>
+	<thead>
+    	<tr>
+      		<th style="text-align:center">English</th>
+      		<th style="text-align:center"><a href="README.ja.md">日本語</a></th>
+    	</tr>
+  	</thead>
+</table>
+
 ## Overview
 This is an application that allows you to easily print memos and images using a thermal printer (receipt printer) at home. You can easily print text, screenshots, and images. (Inspired by [King Jim](https://www.kingjim.co.jp/) [Cocodori](https://www.kingjim.co.jp/sp/cc10/))
 Based on the previous project ([WPT](https://github.com/hatotank/WPT)), emoji printing is also supported.
